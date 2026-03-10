@@ -1,0 +1,66 @@
+import React from 'react';
+import { createClient } from '@/lib/supabase/server';
+
+export const revalidate = 60; // 1 minute cache via nextjs 
+
+export default async function LeaderboardPage() {
+    const supabase = await createClient();
+    const { data: users, error } = await supabase
+        .from('profiles')
+        .select('id, display_name, total_points, is_paid')
+        .order('total_points', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching leaderboard:', error);
+    }
+
+    return (
+        <main className="min-h-screen bg-[var(--color-background)] p-6 flex flex-col items-center">
+            <header className="mb-6 w-full max-w-4xl flex justify-between items-center">
+                <a href="/dashboard" className="text-[var(--color-neon-cyan)] hover:underline font-semibold flex items-center gap-1">
+                    &larr; Volver
+                </a>
+            </header>
+
+            <header className="mb-10 text-center">
+                <h1 className="text-4xl md:text-5xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-neon-purple)] to-[var(--color-neon-red)] drop-shadow-[0_0_10px_rgba(176,38,255,0.5)] uppercase tracking-tight">
+                    Tabla de Posiciones
+                </h1>
+                <p className="text-gray-400 font-body mt-2">Los mejores pronosticadores del torneo</p>
+            </header>
+
+            <div className="w-full max-w-4xl bg-[var(--color-surface)]/60 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-2xl relative overflow-hidden">
+                {/* Decorative ambient light */}
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-[var(--color-neon-purple)] rounded-full mix-blend-screen filter blur-[100px] opacity-20 pointer-events-none"></div>
+                <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-[var(--color-neon-red)] rounded-full mix-blend-screen filter blur-[100px] opacity-20 pointer-events-none"></div>
+
+                <table className="w-full text-left font-body relative z-10">
+                    <thead>
+                        <tr className="border-b border-white/10 text-gray-400 text-sm">
+                            <th className="pb-4 pl-4 font-semibold uppercase">Pos</th>
+                            <th className="pb-4 font-semibold uppercase">Participante</th>
+                            <th className="pb-4 text-right pr-4 font-semibold uppercase">Puntos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {users && users.length > 0 ? users.map((u: any, i: number) => (
+                            <tr key={u.id} className="border-b border-white/5 transition-colors hover:bg-white/5">
+                                <td className="py-4 pl-4 font-heading font-bold text-gray-400 text-xl">
+                                    {i === 0 ? <span className="text-[var(--color-neon-green)] shadow-lg">{i + 1}</span> : i + 1}
+                                </td>
+                                <td className="py-4 font-semibold text-gray-300">
+                                    {u.display_name} {!u.is_paid && <span className="text-xs ml-2 text-gray-600">(Inactivo)</span>}
+                                </td>
+                                <td className="py-4 text-right pr-4 font-heading font-bold text-gray-300 text-xl">
+                                    {u.total_points}
+                                </td>
+                            </tr>
+                        )) : (
+                            <tr><td colSpan={3} className="text-center py-8 text-gray-500">No hay usuarios registrados aún.</td></tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    );
+}
