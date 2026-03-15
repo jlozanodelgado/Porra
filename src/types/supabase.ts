@@ -13,6 +13,8 @@ export interface Database {
                 Row: {
                     id: string
                     display_name: string
+                    nickname: string | null
+                    phone: string | null
                     is_paid: boolean
                     is_admin: boolean
                     total_points: number
@@ -21,6 +23,8 @@ export interface Database {
                 Insert: {
                     id: string
                     display_name: string
+                    nickname?: string | null
+                    phone?: string | null
                     is_paid?: boolean
                     is_admin?: boolean
                     total_points?: number
@@ -29,6 +33,8 @@ export interface Database {
                 Update: {
                     id?: string
                     display_name?: string
+                    nickname?: string | null
+                    phone?: string | null
                     is_paid?: boolean
                     is_admin?: boolean
                     total_points?: number
@@ -155,7 +161,12 @@ export interface Database {
             [_ in never]: never
         }
         Functions: {
-            [_ in never]: never
+            get_email_by_nickname: {
+                Args: {
+                    p_nickname: string
+                }
+                Returns: string
+            }
         }
         Enums: {
             [_ in never]: never

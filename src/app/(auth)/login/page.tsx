@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-    const [email, setEmail] = useState('');
+    const [nickname, setNickname] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
@@ -14,9 +14,23 @@ export default function LoginPage() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+
+        // Obtener el correo electrónico asociado a este nickname
+        const { data: emailData, error: rpcError } = await supabase.rpc('get_email_by_nickname', {
+            p_nickname: nickname
+        });
+
+        if (rpcError || !emailData) {
+            setError('Apodo incorrecto o no encontrado.');
+            return;
+        }
+
+        const email = emailData as string;
+
+        // Iniciar sesión con Supabase Auth usando el correo y la contraseña
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
-            setError(error.message);
+            setError('Contraseña incorrecta.');
         } else {
             router.push('/dashboard');
         }
@@ -36,14 +50,14 @@ export default function LoginPage() {
 
                 <form onSubmit={handleLogin} className="flex flex-col gap-4 font-body">
                     <div className="flex flex-col">
-                        <label className="text-sm text-gray-400 mb-1">Correo Electrónico</label>
+                        <label className="text-sm text-gray-400 mb-1">Apodo (Usuario)</label>
                         <input
-                            type="email"
+                            type="text"
                             required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={nickname}
+                            onChange={(e) => setNickname(e.target.value)}
                             className="bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--color-neon-cyan)] focus:outline-none focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-colors"
-                            placeholder="tu@correo.com"
+                            placeholder="Tu apodo"
                         />
                     </div>
                     <div className="flex flex-col">

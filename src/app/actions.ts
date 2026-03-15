@@ -10,9 +10,11 @@ export async function registerUser(formData: FormData) {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
     const displayName = formData.get('displayName') as string
+    const nickname = formData.get('nickname') as string
+    const phone = formData.get('phone') as string
 
-    if (!email || !password || !displayName) {
-        return { error: 'Todos los campos son obligatorios.' }
+    if (!email || !password || !displayName || !nickname) {
+        return { error: 'Todos los campos obligatorios deben ser completados.' }
     }
 
     const supabase = await createClient()
@@ -34,6 +36,8 @@ export async function registerUser(formData: FormData) {
         const { error: profileError } = await supabase.from('profiles').insert({
             id: data.user.id,
             display_name: displayName,
+            nickname: nickname,
+            phone: phone || null,
         })
 
         if (profileError) {

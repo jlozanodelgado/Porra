@@ -54,7 +54,26 @@ export default function RegisterPage() {
                             />
                         </div>
                         <div className="flex flex-col">
-                            <label className="text-sm text-gray-400 mb-1">Correo Electrónico</label>
+                            <label className="text-sm text-gray-400 mb-1">Apodo (Usuario)</label>
+                            <input
+                                type="text"
+                                name="nickname"
+                                required
+                                className="bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--color-neon-cyan)] focus:outline-none transition-colors"
+                                placeholder="Ej. jperez99"
+                            />
+                        </div>
+                        <div className="flex flex-col">
+                            <label className="text-sm text-gray-400 mb-1">Celular (Opcional)</label>
+                            <input
+                                type="tel"
+                                name="phone"
+                                className="bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--color-neon-cyan)] focus:outline-none transition-colors"
+                                placeholder="Ej. +57 300 000 0000"
+                            />
+                        </div>
+                        <div className="flex flex-col">
+                            <label className="text-sm text-gray-400 mb-1">Correo Electrónico (Oculto en Login)</label>
                             <input
                                 type="email"
                                 name="email"
