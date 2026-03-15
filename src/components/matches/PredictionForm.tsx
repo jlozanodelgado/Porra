@@ -65,23 +65,23 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="mt-4 flex flex-col gap-4 w-full bg-black/40 p-4 rounded-xl border border-white/5 mx-auto max-w-md">
-            <div className="flex justify-between items-center gap-4">
-                <div className="flex flex-col flex-1">
-                    <label className="text-xs text-gray-400 mb-1 text-center">Goles Local</label>
+            <div className="flex justify-between items-center gap-2">
+                <div className="flex flex-col flex-1 min-w-0">
+                    <label className="text-xs text-gray-400 mb-1 text-center truncate">Goles Local</label>
                     <input
                         type="number"
                         disabled={disabled || saving}
-                        className="bg-surface/50 border border-white/20 rounded-lg p-2 text-center text-2xl font-heading focus:border-[var(--color-neon-cyan)] focus:outline-none focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-colors"
+                        className="bg-surface/50 border border-white/20 rounded-lg p-2 text-center text-xl font-heading focus:border-[var(--color-neon-cyan)] focus:outline-none focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-colors w-full"
                         {...register("homeGoals")}
                     />
                 </div>
-                <div className="text-xl font-bold text-gray-500">-</div>
-                <div className="flex flex-col flex-1">
-                    <label className="text-xs text-gray-400 mb-1 text-center">Goles Visitante</label>
+                <div className="text-xl font-bold text-gray-500 px-1">-</div>
+                <div className="flex flex-col flex-1 min-w-0">
+                    <label className="text-xs text-gray-400 mb-1 text-center truncate">Goles Visita</label>
                     <input
                         type="number"
                         disabled={disabled || saving}
-                        className="bg-surface/50 border border-white/20 rounded-lg p-2 text-center text-2xl font-heading focus:border-[var(--color-neon-cyan)] focus:outline-none focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-colors"
+                        className="bg-surface/50 border border-white/20 rounded-lg p-2 text-center text-xl font-heading focus:border-[var(--color-neon-cyan)] focus:outline-none focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-colors w-full"
                         {...register("awayGoals")}
                     />
                 </div>
