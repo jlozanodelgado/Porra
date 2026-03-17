@@ -147,6 +147,7 @@ export default async function RulesPage() {
                                 <ul className="list-disc list-inside space-y-2 text-gray-300 text-sm">
                                     <li>Si existe un <span className="text-white font-bold">empate en el 1er lugar</span>, los ganadores se dividirán el premio (70% + 10%) y <span className="text-[var(--color-neon-red)] font-bold">se anulará el 2do puesto</span>.</li>
                                     <li>De la misma manera, si existe un <span className="text-white font-bold">empate en el 2do lugar</span>, se repartirán el premio correspondiente y <span className="text-[var(--color-neon-red)] font-bold">se anulará el 3er puesto</span>.</li>
+                                    <li>Para los partidos de <span className="text-white font-bold">Eliminación Directa (Playoffs)</span>, solo será válido el marcador de los <span className="text-[var(--color-neon-cyan)] font-bold">90 minutos reglamentarios</span> (incluyendo el tiempo añadido por el juez). No se tendrá en cuenta el resultado de la prórroga ni de la tanda de penaltis.</li>
                                     <li>Las reglas de bloqueo son estrictas: No se pueden realizar o editar pronósticos faltando <span className="text-white font-bold">15 minutos o menos</span> para el inicio del partido.</li>
                                 </ul>
                             </div>
