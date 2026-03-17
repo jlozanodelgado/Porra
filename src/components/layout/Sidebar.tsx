@@ -34,6 +34,7 @@ const participantItems = [
     { href: '/teams', label: 'Equipos', icon: Users },
     { href: '/groups', label: 'Grupos', icon: LayoutGrid },
     { href: '/dashboard/mis-predicciones', label: 'Mis Predicciones', icon: BookOpen },
+    { href: '/reglas', label: 'Reglas', icon: Shield },
 ];
 
 const adminItems = [
@@ -42,6 +43,7 @@ const adminItems = [
     { href: '/admin#results', label: 'Insertar Marcador', icon: ClipboardList },
     { href: '/admin#users', label: 'Aprobar Usuarios', icon: UserCheck },
     { href: '/admin#users', label: 'Borrar Usuario', icon: UserMinus },
+    { href: '/reglas', label: 'Reglas', icon: Shield },
 ];
 
 export default function Sidebar({ isAdmin, displayName }: SidebarProps) {
