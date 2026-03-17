@@ -20,6 +20,7 @@ interface PredictionFormProps {
     initialHomeGoals?: number | null;
     initialAwayGoals?: number | null;
     disabled: boolean;
+    status?: string;
 }
 
 export const PredictionForm: React.FC<PredictionFormProps> = ({
@@ -27,7 +28,8 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({
     userId,
     initialHomeGoals,
     initialAwayGoals,
-    disabled
+    disabled,
+    status
 }) => {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
@@ -99,7 +101,7 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({
                 disabled={disabled || saving}
                 className="mt-2 w-full py-3 rounded-lg bg-[var(--color-neon-green)] text-black font-bold font-heading disabled:opacity-50 disabled:bg-gray-600 disabled:text-gray-300 transition-all hover:brightness-110 shadow-lg"
             >
-                {saving ? 'Guardando...' : disabled ? 'Bloqueado (Quedan < 15 min)' : 'Guardar Pronóstico'}
+                {saving ? 'Guardando...' : status === 'finished' ? 'Partido Calificado' : disabled ? 'Bloqueado (Quedan < 15 min)' : 'Guardar Pronóstico'}
             </button>
         </form>
     );

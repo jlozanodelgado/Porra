@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { Users } from 'lucide-react';
 
 import Sidebar from '@/components/layout/Sidebar';
+import EditTeamButton from '@/components/admin/EditTeamButton';
 
 export default async function TeamsPage() {
     const supabase = await createClient();
@@ -41,7 +42,8 @@ export default async function TeamsPage() {
 
                 <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     {teams?.map((t) => (
-                        <div key={t.id} className="bg-[var(--color-surface)]/40 backdrop-blur-md border border-white/5 rounded-2xl p-4 flex flex-col items-center hover:bg-[var(--color-surface)]/60 transition-all group">
+                        <div key={t.id} className="bg-[var(--color-surface)]/40 backdrop-blur-md border border-white/5 rounded-2xl p-4 flex flex-col items-center hover:bg-[var(--color-surface)]/60 transition-all group relative">
+                            {isAdmin && <EditTeamButton team={t} />}
                             <div className="w-full aspect-[3/2] bg-white/5 rounded-lg mb-3 overflow-hidden border border-white/10 group-hover:scale-105 transition-transform duration-300 shadow-lg">
                                 {t.flag_url ? (
                                     <img src={t.flag_url} alt={t.name} className="w-full h-full object-cover" />

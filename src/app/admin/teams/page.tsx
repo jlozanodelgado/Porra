@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import AdminTeamForm from '@/components/admin/AdminTeamForm';
 import { ArrowLeft, Users } from 'lucide-react';
 import Link from 'next/link';
+import EditTeamButton from '@/components/admin/EditTeamButton';
 
 export default async function AdminTeamsPage() {
     const supabase = await createClient();
@@ -57,7 +58,8 @@ export default async function AdminTeamsPage() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {teams?.map((t) => (
-                                <div key={t.id} className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
+                                <div key={t.id} className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border border-white/5 relative group">
+                                    <EditTeamButton team={t} />
                                     <div className="w-10 h-7 bg-white/5 rounded overflow-hidden flex-shrink-0 border border-white/10">
                                         {t.flag_url ? (
                                             <img src={t.flag_url} alt={t.name} className="w-full h-full object-cover" />

@@ -298,3 +298,97 @@ export async function createTeam(formData: FormData) {
 
     return { success: true }
 }
+
+export async function updateTeam(formData: FormData) {
+    const supabase = await createClient()
+
+    // Verificar admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'No autenticado.' }
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+
+    const teamId = formData.get('teamId') as string
+    const name = formData.get('name') as string
+    const flagUrl = formData.get('flagUrl') as string
+    const groupName = formData.get('groupName') as string
+
+    if (!teamId || !name || !groupName) {
+        return { error: 'ID, Nombre y Grupo son obligatorios.' }
+    }
+
+    const { error } = await supabase.from('teams').update({
+        name,
+        flag_url: flagUrl,
+        group_name: groupName.toUpperCase()
+    }).eq('id', parseInt(teamId))
+
+    if (error) {
+        console.error('Error updating team:', error)
+        return { error: 'Error al actualizar el equipo.' }
+    }
+
+    return { success: true }
+}
+
+export async function deleteMatch(matchId: number) {
+    const supabase = await createClient()
+
+    // Verificar admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'No autenticado.' }
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+
+    // 1. Obtener los IDs de los usuarios que tienen predicciones en este partido
+    const { data: predictions } = await supabase
+        .from('predictions')
+        .select('user_id')
+        .eq('match_id', matchId)
+    
+    const affectedUserIds = [...new Set(predictions?.map(p => p.user_id) || [])]
+
+    // 2. Eliminar predicciones asociadas primero (ya que no hay ON DELETE CASCADE en la BD)
+    const { error: predDeleteError } = await supabase.from('predictions').delete().eq('match_id', matchId)
+    
+    if (predDeleteError) {
+        console.error('Error deleting predictions:', predDeleteError)
+        return { error: 'Error al eliminar los pronósticos asociados.' }
+    }
+
+    // 3. Eliminar el partido
+    const { error: deleteError } = await supabase.from('matches').delete().eq('id', matchId)
+
+    if (deleteError) {
+        console.error('Error deleting match:', deleteError)
+        return { error: 'Error al eliminar el partido.' }
+    }
+
+    // 4. Recalcular total_points para cada usuario afectado
+    for (const userId of affectedUserIds) {
+        const { data: userPreds } = await supabase
+            .from('predictions')
+            .select('points_earned')
+            .eq('user_id', userId)
+
+        const newTotal = userPreds?.reduce((sum, p) => sum + (p.points_earned || 0), 0) ?? 0
+
+        await supabase.from('profiles').update({
+            total_points: newTotal
+        }).eq('id', userId)
+    }
+
+    return { success: true }
+}

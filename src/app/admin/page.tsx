@@ -5,15 +5,15 @@ import AdminUserList from '@/components/admin/AdminUserList';
 import AdminMatchForm from '@/components/admin/AdminMatchForm';
 import AdminResultForm from '@/components/admin/AdminResultForm';
 import Sidebar from '@/components/layout/Sidebar';
+import AdminPredictionTable from '@/components/admin/AdminPredictionTable';
 
 export default async function AdminPage() {
     const supabase = await createClient();
 
-    // Verificar autenticación
+    // ... (existing auth and admin checks)
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) redirect('/login');
 
-    // Verificar que es admin
     const { data: profile } = await supabase
         .from('profiles')
         .select('is_admin, display_name')
@@ -31,7 +31,7 @@ export default async function AdminPage() {
         .select('id, display_name, is_paid, total_points, created_at')
         .order('created_at', { ascending: false });
 
-    const { data: matches } = await supabase
+    const { data: matchesData } = await supabase
         .from('matches')
         .select(`
             *,
@@ -40,10 +40,37 @@ export default async function AdminPage() {
         `)
         .order('kickoff_time', { ascending: true });
 
+    const matches = matchesData || [];
+
     const { data: teams } = await supabase
         .from('teams')
         .select('id, name')
         .order('name', { ascending: true });
+
+    // Cargar predicciones Consolidadas (Solo de partidos bloqueados o finalizados)
+    // Usamos el mismo filtro temporal que en PredictionsPage
+    const nowUtc = new Date();
+    const cutoffTime = new Date(nowUtc.getTime() + 15 * 60 * 1000).toISOString();
+
+    const { data: allPredictions } = await supabase
+        .from('predictions')
+        .select(`
+            id,
+            home_goals_pred,
+            away_goals_pred,
+            points_earned,
+            user_id,
+            profiles(display_name),
+            matches!inner(
+                id,
+                kickoff_time,
+                status,
+                home:home_team_id(name),
+                away:away_team_id(name)
+            )
+        `)
+        .or(`status.eq.finished,kickoff_time.lte.${cutoffTime}`, { foreignTable: 'matches' })
+        .order('updated_at', { ascending: false });
 
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
@@ -83,7 +110,18 @@ export default async function AdminPage() {
                         <AdminResultForm matches={(matches as any) ?? []} />
                     </div>
 
-                    {/* Panel 3: Gestión de Partidos (full width) */}
+                    {/* Panel 3: Reporte de Transparencia (Consolidado de Predicciones) */}
+                    <div id="report" className="lg:col-span-2 bg-[var(--color-surface)]/80 backdrop-blur-md border border-[var(--color-neon-green)]/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                        <div className="absolute -top-20 -right-20 w-40 h-40 bg-[var(--color-neon-green)] rounded-full mix-blend-screen filter blur-[80px] opacity-15 pointer-events-none"></div>
+                        <h2 className="text-xl font-bold font-heading text-white mb-4 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-[var(--color-neon-green)] shadow-[0_0_6px_var(--color-neon-green)]"></span>
+                            Reporte de Transparencia (Consolidado)
+                        </h2>
+                        <p className="text-xs text-gray-500 mb-6">Muestra todos los pronósticos una vez el partido está bloqueado o finalizado.</p>
+                        <AdminPredictionTable predictions={(allPredictions as any) || []} />
+                    </div>
+
+                    {/* Panel 4: Gestión de Partidos */}
                     <div id="matches" className="lg:col-span-2 bg-[var(--color-surface)]/80 backdrop-blur-md border border-[var(--color-neon-purple)]/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
                         <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-[var(--color-neon-purple)] rounded-full mix-blend-screen filter blur-[80px] opacity-15 pointer-events-none"></div>
                         <h2 className="text-xl font-bold font-heading text-white mb-4 flex items-center gap-2">

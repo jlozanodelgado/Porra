@@ -22,19 +22,37 @@ export default async function PredictionsPage() {
     const displayName = profile?.display_name || 'Usuario';
 
     // Cargar predicciones públicas (solo si el partido empezó o faltan <15 min)
-    // El RLS ya se encarga de filtrar esto, así que podemos pedir todo.
+    // El RLS permite lectura cuando (kickoff_time <= NOW() + 15 min), pero para la vista
+    // de todos es mejor asegurar el filtro o confiar en el RLS. Confiaremos en el RLS
+    // que fue diseñado para retornar las filas válidas según la hora actual del servidor.
     const { data: predictions } = await supabase
         .from('predictions')
         .select(`
             *,
-            profiles(display_name),
-            matches(
+            profiles!inner(display_name, is_admin),
+            matches!inner(
                 kickoff_time,
+                status,
                 home:home_team_id(name),
                 away:away_team_id(name)
             )
         `)
+        .eq('profiles.is_admin', false)
         .order('updated_at', { ascending: false });
+
+    // Filtrar predicciones para mostrar SOLO las de partidos bloqueados o finalizados.
+    // Esto asegura que la UI no muestre predicciones de partidos a futuro por error.
+    const nowUtc = new Date();
+    // Añadimos 15 min al current time para compararlo con el kickoff
+    const cutoffTime = new Date(nowUtc.getTime() + 15 * 60 * 1000);
+
+    const publicPredictions = predictions?.filter((p: any) => {
+        if (!p.matches) return false;
+        if (p.matches.status === 'finished') return true;
+        
+        const kickoffTime = new Date(p.matches.kickoff_time);
+        return kickoffTime <= cutoffTime;
+    }) || [];
 
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
@@ -50,11 +68,16 @@ export default async function PredictionsPage() {
                 </header>
 
                 <div className="max-w-5xl mx-auto">
-                    {predictions && predictions.length > 0 ? (
+                    {publicPredictions && publicPredictions.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {predictions.map((p: any) => (
-                                <div key={p.id} className="bg-[var(--color-surface)]/40 backdrop-blur-md border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all">
-                                    <div className="flex justify-between items-start mb-4">
+                            {publicPredictions.map((p: any) => (
+                                <div key={p.id} className="bg-[var(--color-surface)]/40 backdrop-blur-md border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all relative overflow-hidden">
+                                    {(p.matches?.status === 'finished' || new Date(p.matches?.kickoff_time) <= cutoffTime) && (
+                                        <div className={`absolute top-0 right-0 left-0 text-center text-[9px] font-black py-0.5 z-10 uppercase tracking-[0.2em] backdrop-blur-md border-b ${p.matches.status === 'finished' ? 'bg-[var(--color-neon-green)]/10 text-[var(--color-neon-green)] border-[var(--color-neon-green)]/20' : 'bg-[var(--color-neon-red)]/10 text-[var(--color-neon-red)] border-[var(--color-neon-red)]/20'}`}>
+                                            {p.matches.status === 'finished' ? 'Calificado' : 'Bloqueado'}
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-start mb-4 mt-2">
                                         <div>
                                             <p className="text-xs text-gray-500 uppercase font-bold tracking-tighter">Jugador</p>
                                             <p className="text-white font-bold">{p.profiles?.display_name}</p>

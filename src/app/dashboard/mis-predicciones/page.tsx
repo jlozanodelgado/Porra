@@ -77,8 +77,8 @@ export default async function MisPrediccionesPage() {
                         return (
                             <div key={p.id} className="bg-[var(--color-surface)]/40 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all shadow-xl flex flex-col relative">
                                 {isLocked && (
-                                    <div className="absolute top-0 right-0 left-0 bg-[var(--color-neon-red)]/10 text-[var(--color-neon-red)] text-center text-xs font-bold py-1 z-10 uppercase tracking-widest backdrop-blur-md border-b border-[var(--color-neon-red)]/20">
-                                        Partido Bloqueado Cerrado
+                                    <div className={`absolute top-0 right-0 left-0 text-center text-xs font-bold py-1 z-10 uppercase tracking-widest backdrop-blur-md border-b ${m.status === 'finished' ? 'bg-[var(--color-neon-green)]/10 text-[var(--color-neon-green)] border-[var(--color-neon-green)]/20' : 'bg-[var(--color-neon-red)]/10 text-[var(--color-neon-red)] border-[var(--color-neon-red)]/20'}`}>
+                                        {m.status === 'finished' ? 'Partido Calificado' : 'Partido Bloqueado'}
                                     </div>
                                 )}
                                 
@@ -123,7 +123,8 @@ export default async function MisPrediccionesPage() {
                                         userId={user.id} 
                                         initialHomeGoals={p.home_goals_pred} 
                                         initialAwayGoals={p.away_goals_pred} 
-                                        disabled={isLocked} 
+                                        disabled={isLocked}
+                                        status={m.status}
                                     />
                                 </div>
                             </div>

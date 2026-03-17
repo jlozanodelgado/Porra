@@ -8,6 +8,7 @@ export default async function LeaderboardPage() {
     const { data: users, error } = await supabase
         .from('profiles')
         .select('id, display_name, total_points, is_paid')
+        .eq('is_admin', false)
         .order('total_points', { ascending: false });
 
     if (error) {
@@ -49,10 +50,21 @@ export default async function LeaderboardPage() {
                                     {i === 0 ? <span className="text-[var(--color-neon-green)] shadow-lg">{i + 1}</span> : i + 1}
                                 </td>
                                 <td className="py-4 font-semibold text-gray-300">
-                                    {u.display_name} {!u.is_paid && <span className="text-xs ml-2 text-gray-600">(Inactivo)</span>}
+                                    <a href={`/leaderboard/${u.id}`} className="hover:text-[var(--color-neon-cyan)] transition-colors">
+                                        {u.display_name}
+                                    </a>
+                                    {!u.is_paid && <span className="text-xs ml-2 text-gray-600">(Inactivo)</span>}
                                 </td>
                                 <td className="py-4 text-right pr-4 font-heading font-bold text-gray-300 text-xl">
-                                    {u.total_points}
+                                    <div className="flex items-center justify-end gap-4">
+                                        <span>{u.total_points}</span>
+                                        <a 
+                                            href={`/leaderboard/${u.id}`}
+                                            className="px-2 py-1 rounded bg-white/5 border border-white/10 text-[10px] uppercase font-bold text-[var(--color-neon-cyan)] hover:bg-[var(--color-neon-cyan)]/10 transition-all"
+                                        >
+                                            Ver
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         )) : (

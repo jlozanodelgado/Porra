@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
 import MenuHub from '@/components/layout/MenuHub';
 import Sidebar from '@/components/layout/Sidebar';
@@ -31,7 +32,8 @@ export default async function LandingPage() {
           <div className="absolute top-10 left-10 w-96 h-96 bg-[var(--color-neon-cyan)]/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-[var(--color-neon-purple)]/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
 
-          <header className="mb-12 text-center">
+          <header className="mb-12 text-center flex flex-col items-center">
+            <Image src="/logo2026.jpg" alt="Logo Mundial 2026" width={150} height={150} className="mb-6 rounded-2xl shadow-[0_0_20px_var(--color-neon-cyan)]" priority />
             <h1 className="text-4xl md:text-6xl font-heading font-black text-white uppercase tracking-tighter mb-2">
               Bienvenido, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-neon-green)] to-[var(--color-neon-cyan)]">{displayName}</span>
             </h1>
@@ -52,6 +54,7 @@ export default async function LandingPage() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[var(--color-neon-green)]/10 rounded-full blur-[150px] pointer-events-none"></div>
 
       <div className="z-10 text-center max-w-3xl flex flex-col items-center">
+        <Image src="/logo2026.jpg" alt="Logo Mundial 2026" width={200} height={200} className="mb-8 rounded-3xl shadow-[0_0_30px_var(--color-neon-green)]" priority />
         <div className="inline-block px-4 py-1.5 rounded-full border border-[var(--color-neon-cyan)]/30 bg-[var(--color-neon-cyan)]/10 text-[var(--color-neon-cyan)] font-semibold text-sm mb-6 tracking-wider">
           FUTBOL TOTAL 2026
         </div>

@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useTransition } from 'react';
-import { upsertMatch } from '@/app/actions';
+import { upsertMatch, deleteMatch } from '@/app/actions';
 import { useRouter } from 'next/navigation';
-import { formatToColombiaTime } from '@/utils/date-helpers';
+import { formatToColombiaTime, getColombiaDatetimeLocal } from '@/utils/date-helpers';
 
 interface Team {
     id: number;
@@ -31,6 +31,14 @@ export default function AdminMatchForm({ teams, matches }: { teams: Team[]; matc
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
+
+        // Convertir la hora ingresada (Colombia) a UTC
+        const kickoffTimeCol = formData.get('kickoffTime') as string;
+        if (kickoffTimeCol) {
+            const utcDate = new Date(kickoffTimeCol + '-05:00').toISOString();
+            formData.set('kickoffTime', utcDate);
+        }
+
         startTransition(async () => {
             const result = await upsertMatch(formData);
             if (result?.error) {
@@ -79,11 +87,11 @@ export default function AdminMatchForm({ teams, matches }: { teams: Team[]; matc
             </div>
             <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                    <label className="text-xs text-gray-400 block mb-1">Fecha y Hora (UTC)</label>
+                    <label className="text-xs text-gray-400 block mb-1">Fecha y Hora (Colombia)</label>
                     <input
                         type="datetime-local"
                         name="kickoffTime"
-                        defaultValue={match?.kickoff_time ? match.kickoff_time.slice(0, 16) : ''}
+                        defaultValue={match?.kickoff_time ? getColombiaDatetimeLocal(match.kickoff_time) : ''}
                         required
                         className="w-full bg-[var(--color-surface)] border border-white/20 p-2 rounded text-white text-sm"
                     />
@@ -146,15 +154,33 @@ export default function AdminMatchForm({ teams, matches }: { teams: Team[]; matc
                                         {formatToColombiaTime(m.kickoff_time)} — {m.is_playoff ? '🏆 Playoff' : '⚽ Grupo'} — {m.status}
                                     </p>
                                 </div>
-                                {m.status !== 'finished' && (
-                                    <button
-                                        onClick={() => setEditingId(m.id)}
-                                        className="text-[var(--color-neon-cyan)] text-sm font-semibold hover:underline"
-                                    >
-                                        Editar
-                                    </button>
-                                )}
-                            </div>
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => setEditingId(m.id)}
+                                            className="text-[var(--color-neon-cyan)] text-sm font-semibold hover:underline"
+                                        >
+                                            Editar
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (confirm('¿Estás seguro de que quieres eliminar este partido?')) {
+                                                    startTransition(async () => {
+                                                        const result = await deleteMatch(m.id);
+                                                        if (result?.error) {
+                                                            setFeedback(result.error);
+                                                        } else {
+                                                            setFeedback('✅ Partido eliminado correctamente');
+                                                            router.refresh();
+                                                        }
+                                                    });
+                                                }
+                                            }}
+                                            className="text-[var(--color-neon-red)] text-sm font-semibold hover:underline"
+                                        >
+                                            Eliminar
+                                        </button>
+                                    </div>
+                                </div>
                         )}
                     </div>
                 ))}

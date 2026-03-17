@@ -39,7 +39,23 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const prediction = fetchPrediction as any;
 
-    const disabled = isMatchLocked(match.kickoff_time);
+    const disabled = isMatchLocked(match.kickoff_time) || match.status === 'finished';
+
+    // Fetch public predictions if the match is locked or finished
+    let publicPredictions: any[] = [];
+    if (disabled) {
+        const { data: fetchPublicPreds } = await supabase
+            .from('predictions')
+            .select(`
+                *,
+                profiles(display_name)
+            `)
+            .eq('match_id', match.id)
+            .order('points_earned', { ascending: false }); // Ordenar por puntos o por fecha
+            
+        publicPredictions = fetchPublicPreds || [];
+    }
+
 
     return (
         <main className="min-h-screen bg-[var(--color-background)] p-6 flex flex-col items-center">
@@ -79,7 +95,27 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
                     Pronósticos Públicos
                 </h3>
                 {disabled ? (
-                    <p className="text-gray-400 text-center py-4">Los pronósticos de otros jugadores aparecerán aquí pronto.</p>
+                    publicPredictions.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                            {publicPredictions.map((p) => (
+                                <div key={p.id} className="bg-black/40 border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center">
+                                    <p className="text-sm text-gray-400 font-semibold mb-2">{p.profiles?.display_name || 'Usuario'}</p>
+                                    <div className="flex items-center gap-3 text-xl font-heading font-bold text-white mb-2">
+                                        <span>{p.home_goals_pred}</span>
+                                        <span className="text-gray-600 text-sm">-</span>
+                                        <span>{p.away_goals_pred}</span>
+                                    </div>
+                                    {match.status === 'finished' && (
+                                        <p className="text-xs font-bold text-[var(--color-neon-green)]">
+                                            +{p.points_earned} PTS
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-gray-400 text-center py-4">Nadie hizo pronósticos para este partido.</p>
+                    )
                 ) : (
                     <p className="text-gray-500 italic text-center py-8">
                         Ocultos. Aparecerán cuando falten menos de 15 minutos para el partido.
