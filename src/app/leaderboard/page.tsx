@@ -7,13 +7,22 @@ export default async function LeaderboardPage() {
     const supabase = await createClient();
     const { data: users, error } = await supabase
         .from('profiles')
-        .select('id, display_name, total_points, is_paid')
+        .select('id, display_name, nickname, avatar_url, total_points, is_paid')
         .eq('is_admin', false)
         .order('total_points', { ascending: false });
 
     if (error) {
         console.error('Error fetching leaderboard:', error);
     }
+
+    // Calcular puestos manejando empates
+    let currentRank = 1;
+    const usersWithRank = users ? users.map((u: any, i: number) => {
+        if (i > 0 && u.total_points < users[i - 1].total_points) {
+            currentRank = i + 1;
+        }
+        return { ...u, rank: currentRank };
+    }) : [];
 
     return (
         <main className="min-h-screen bg-[var(--color-background)] p-6 flex flex-col items-center">
@@ -44,16 +53,25 @@ export default async function LeaderboardPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {users && users.length > 0 ? users.map((u: any, i: number) => (
+                        {usersWithRank.length > 0 ? usersWithRank.map((u: any) => (
                             <tr key={u.id} className="border-b border-white/5 transition-colors hover:bg-white/5">
                                 <td className="py-4 pl-4 font-heading font-bold text-gray-400 text-xl">
-                                    {i === 0 ? <span className="text-[var(--color-neon-green)] shadow-lg">{i + 1}</span> : i + 1}
+                                    {u.rank === 1 ? <span className="text-[var(--color-neon-green)] shadow-lg">{u.rank}</span> : u.rank}
                                 </td>
                                 <td className="py-4 font-semibold text-gray-300">
-                                    <a href={`/leaderboard/${u.id}`} className="hover:text-[var(--color-neon-cyan)] transition-colors">
-                                        {u.display_name}
-                                    </a>
-                                    {!u.is_paid && <span className="text-xs ml-2 text-gray-600">(Inactivo)</span>}
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10 bg-white/5">
+                                            <img 
+                                                src={u.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.nickname || u.id)}`} 
+                                                alt="Avatar" 
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <a href={`/leaderboard/${u.id}`} className="hover:text-[var(--color-neon-cyan)] transition-colors">
+                                            {u.nickname || u.display_name}
+                                        </a>
+                                        {!u.is_paid && <span className="text-xs ml-2 text-gray-600">(Inactivo)</span>}
+                                    </div>
                                 </td>
                                 <td className="py-4 text-right pr-4 font-heading font-bold text-gray-300 text-xl">
                                     <div className="flex items-center justify-end gap-4">

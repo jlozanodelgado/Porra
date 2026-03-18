@@ -16,19 +16,19 @@ export default async function AdminPage() {
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('is_admin, display_name')
+        .select('id, is_admin, display_name, nickname, avatar_url')
         .eq('id', user.id)
         .single();
 
-    if (!profile?.is_admin) redirect('/dashboard');
-
-    const isAdmin = true;
-    const displayName = profile?.display_name || 'Admin';
+    const isAdmin = profile?.is_admin || false;
+    const displayName = profile?.nickname || profile?.display_name || 'Admin';
+    const avatarUrl = profile?.avatar_url;
+    const nickname = profile?.nickname || '';
 
     // Cargar datos
     const { data: users } = await supabase
         .from('profiles')
-        .select('id, display_name, is_paid, total_points, created_at')
+        .select('id, display_name, nickname, is_paid, total_points, created_at')
         .order('created_at', { ascending: false });
 
     const { data: matchesData } = await supabase
@@ -60,7 +60,7 @@ export default async function AdminPage() {
             away_goals_pred,
             points_earned,
             user_id,
-            profiles(display_name),
+            profiles(display_name, nickname, avatar_url),
             matches!inner(
                 id,
                 kickoff_time,
@@ -74,8 +74,8 @@ export default async function AdminPage() {
 
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
-            <Sidebar isAdmin={isAdmin} displayName={displayName} />
-            <main className="flex-1 overflow-y-auto p-6">
+            <Sidebar isAdmin={isAdmin} displayName={displayName} avatarUrl={avatarUrl} nickname={nickname} />
+            <main className="flex-1 overflow-y-auto p-6 md:p-12 relative">
                 <header className="mb-6 max-w-6xl mx-auto flex justify-between items-center">
                     <a href="/" className="text-[var(--color-neon-cyan)] hover:underline font-semibold text-sm">
                         &larr; Volver al Inicio

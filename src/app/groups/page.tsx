@@ -14,12 +14,14 @@ export default async function GroupsPage() {
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('is_admin, display_name')
+        .select('is_admin, display_name, nickname, avatar_url')
         .eq('id', user.id)
         .single();
 
     const isAdmin = profile?.is_admin || false;
-    const displayName = profile?.display_name || 'Usuario';
+    const displayName = profile?.nickname || profile?.display_name || 'Usuario';
+    const avatarUrl = profile?.avatar_url;
+    const nickname = profile?.nickname || '';
 
     const { data: teams } = await supabase
         .from('teams')
@@ -39,8 +41,8 @@ export default async function GroupsPage() {
 
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
-            <Sidebar isAdmin={isAdmin} displayName={displayName} />
-            <main className="flex-1 overflow-y-auto p-6">
+            <Sidebar isAdmin={isAdmin} displayName={displayName} avatarUrl={avatarUrl} nickname={nickname} />
+            <main className="flex-1 overflow-y-auto p-6 md:p-12 relative">
                 <header className="mb-10 text-center max-w-4xl mx-auto">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-neon-green)]/10 border border-[var(--color-neon-green)]/20 text-[var(--color-neon-green)] text-xs font-bold uppercase tracking-widest mb-4">
                         <LayoutGrid size={14} />

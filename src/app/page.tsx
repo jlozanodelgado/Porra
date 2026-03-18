@@ -11,22 +11,26 @@ export default async function LandingPage() {
 
   let isAdmin = false;
   let displayName = '';
+  let avatarUrl = null; // Initialize avatarUrl
+  let nickname = ''; // Initialize nickname
 
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_admin, display_name')
+      .select('is_admin, display_name, nickname, avatar_url') // Added avatar_url
       .eq('id', user.id)
       .single();
 
     isAdmin = profile?.is_admin || false;
-    displayName = profile?.display_name || 'Usuario';
+    displayName = profile?.nickname || profile?.display_name || 'Usuario';
+    avatarUrl = profile?.avatar_url; // Assign avatarUrl
+    nickname = profile?.nickname || ''; // Assign nickname
   }
 
   if (user) {
     return (
       <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
-        <Sidebar isAdmin={isAdmin} displayName={displayName} />
+        <Sidebar isAdmin={isAdmin} displayName={displayName} avatarUrl={avatarUrl} nickname={nickname} />
         <main className="flex-1 overflow-y-auto p-6 md:p-12 relative">
           {/* Luces Neón de Fondo */}
           <div className="absolute top-10 left-10 w-96 h-96 bg-[var(--color-neon-cyan)]/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>

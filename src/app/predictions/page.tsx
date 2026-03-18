@@ -14,12 +14,14 @@ export default async function PredictionsPage() {
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('is_admin, display_name')
+        .select('is_admin, display_name, nickname, avatar_url')
         .eq('id', user.id)
         .single();
 
     const isAdmin = profile?.is_admin || false;
-    const displayName = profile?.display_name || 'Usuario';
+    const displayName = profile?.nickname || profile?.display_name || 'Usuario';
+    const avatarUrl = profile?.avatar_url;
+    const nickname = profile?.nickname || '';
 
     // Cargar predicciones públicas (solo si el partido empezó o faltan <15 min)
     // El RLS permite lectura cuando (kickoff_time <= NOW() + 15 min), pero para la vista
@@ -29,7 +31,7 @@ export default async function PredictionsPage() {
         .from('predictions')
         .select(`
             *,
-            profiles!inner(display_name, is_admin),
+            profiles!inner(display_name, nickname, is_admin),
             matches!inner(
                 kickoff_time,
                 status,
@@ -56,8 +58,8 @@ export default async function PredictionsPage() {
 
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
-            <Sidebar isAdmin={isAdmin} displayName={displayName} />
-            <main className="flex-1 overflow-y-auto p-6">
+            <Sidebar isAdmin={isAdmin} displayName={displayName} avatarUrl={avatarUrl} nickname={nickname} />
+            <main className="flex-1 overflow-y-auto p-6 md:p-12 relative">
                 <header className="mb-10 text-center max-w-4xl mx-auto">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-neon-cyan)]/10 border border-[var(--color-neon-cyan)]/20 text-[var(--color-neon-cyan)] text-xs font-bold uppercase tracking-widest mb-4">
                         <ClipboardList size={14} />
@@ -80,7 +82,7 @@ export default async function PredictionsPage() {
                                     <div className="flex justify-between items-start mb-4 mt-2">
                                         <div>
                                             <p className="text-xs text-gray-500 uppercase font-bold tracking-tighter">Jugador</p>
-                                            <p className="text-white font-bold">{p.profiles?.display_name}</p>
+                                            <p className="text-white font-bold">{p.profiles?.nickname || p.profiles?.display_name}</p>
                                         </div>
                                         <div className="text-right">
                                             <p className="text-[var(--color-neon-green)] font-heading font-black text-xl">

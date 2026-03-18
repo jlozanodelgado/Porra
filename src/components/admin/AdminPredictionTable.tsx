@@ -12,6 +12,8 @@ interface Prediction {
     user_id: string;
     profiles: {
         display_name: string;
+        nickname: string| null;
+        avatar_url: string | null;
     };
     matches: {
         id: number;
@@ -26,7 +28,9 @@ export default function AdminPredictionTable({ predictions }: { predictions: Pre
     const [matchFilter, setMatchFilter] = useState('');
 
     const filteredPredictions = predictions.filter(p => {
-        const matchesSearch = p.profiles.display_name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = 
+            p.profiles.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (p.profiles.nickname && p.profiles.nickname.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchName = `${p.matches.home.name} vs ${p.matches.away.name}`.toLowerCase();
         const matchesFilter = matchFilter === '' || matchName.includes(matchFilter.toLowerCase());
         return matchesSearch && matchesFilter;
@@ -106,7 +110,18 @@ export default function AdminPredictionTable({ predictions }: { predictions: Pre
                     <tbody className="divide-y divide-white/5 text-gray-300">
                         {filteredPredictions.map((p) => (
                             <tr key={p.id} className="hover:bg-white/5 transition-colors">
-                                <td className="px-4 py-3 font-bold text-white">{p.profiles.display_name}</td>
+                                <td className="px-4 py-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full overflow-hidden border border-white/10 bg-white/5 shrink-0">
+                                            <img 
+                                                src={p.profiles.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(p.profiles.nickname || p.user_id)}`} 
+                                                alt="" 
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <span className="font-bold text-white truncate">{p.profiles.nickname || p.profiles.display_name}</span>
+                                    </div>
+                                </td>
                                 <td className="px-4 py-3">
                                     <div className="font-medium text-gray-200">{p.matches.home.name} vs {p.matches.away.name}</div>
                                     <div className="text-[10px] text-gray-500">{formatToColombiaTime(p.matches.kickoff_time)}</div>

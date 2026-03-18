@@ -18,6 +18,7 @@ export interface Database {
                     is_paid: boolean
                     is_admin: boolean
                     total_points: number
+                    avatar_url: string | null
                     created_at: string
                 }
                 Insert: {
@@ -28,6 +29,7 @@ export interface Database {
                     is_paid?: boolean
                     is_admin?: boolean
                     total_points?: number
+                    avatar_url?: string | null
                     created_at?: string
                 }
                 Update: {
@@ -38,6 +40,7 @@ export interface Database {
                     is_paid?: boolean
                     is_admin?: boolean
                     total_points?: number
+                    avatar_url?: string | null
                     created_at?: string
                 }
                 Relationships: []

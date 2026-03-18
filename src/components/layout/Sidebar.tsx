@@ -17,7 +17,8 @@ import {
     LogOut,
     UserMinus,
     UserCheck,
-    Search
+    Search,
+    User
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -25,6 +26,8 @@ import { useRouter } from 'next/navigation';
 interface SidebarProps {
     isAdmin: boolean;
     displayName: string;
+    avatarUrl?: string | null;
+    nickname: string;
 }
 
 const participantItems = [
@@ -34,6 +37,7 @@ const participantItems = [
     { href: '/teams', label: 'Equipos', icon: Users },
     { href: '/groups', label: 'Grupos', icon: LayoutGrid },
     { href: '/dashboard/mis-predicciones', label: 'Mis Predicciones', icon: BookOpen },
+    { href: '/profile', label: 'Mi Perfil', icon: User },
     { href: '/reglas', label: 'Reglas', icon: Shield },
 ];
 
@@ -43,10 +47,11 @@ const adminItems = [
     { href: '/admin#results', label: 'Insertar Marcador', icon: ClipboardList },
     { href: '/admin#users', label: 'Aprobar Usuarios', icon: UserCheck },
     { href: '/admin#users', label: 'Borrar Usuario', icon: UserMinus },
+    { href: '/profile', label: 'Mi Perfil', icon: User },
     { href: '/reglas', label: 'Reglas', icon: Shield },
 ];
 
-export default function Sidebar({ isAdmin, displayName }: SidebarProps) {
+export default function Sidebar({ isAdmin, displayName, avatarUrl, nickname }: SidebarProps) {
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
     const router = useRouter();
@@ -74,15 +79,24 @@ export default function Sidebar({ isAdmin, displayName }: SidebarProps) {
             </div>
 
             {/* User Info */}
-            <div className="px-5 py-4 border-b border-white/5">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Jugador</p>
-                <p className="text-sm text-white font-semibold truncate mt-1">{displayName}</p>
-                {isAdmin && (
-                    <span className="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-neon-red)]/20 text-[var(--color-neon-red)] font-bold uppercase">
-                        Admin
-                    </span>
-                )}
-            </div>
+            <Link href="/profile" className="px-5 py-6 border-b border-white/5 flex items-center gap-3 hover:bg-white/5 transition-colors group">
+                <div className="w-10 h-10 rounded-full border border-[var(--color-neon-cyan)]/30 overflow-hidden bg-white/5 shadow-[0_0_10px_rgba(0,255,255,0.1)] group-hover:border-[var(--color-neon-cyan)] transition-all">
+                    <img 
+                        src={avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(nickname)}`} 
+                        alt="Avatar" 
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+                <div className="flex-1 overflow-hidden">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black group-hover:text-[var(--color-neon-cyan)] transition-colors">Jugador</p>
+                    <p className="text-sm text-white font-bold truncate leading-none mt-1">{displayName}</p>
+                    {isAdmin && (
+                        <span className="inline-block mt-1 text-[8px] px-1.5 py-0 rounded bg-[var(--color-neon-red)]/20 text-[var(--color-neon-red)] font-black uppercase">
+                            Admin
+                        </span>
+                    )}
+                </div>
+            </Link>
 
             {/* Navigation */}
             <nav className="flex-1 py-4 overflow-y-auto">

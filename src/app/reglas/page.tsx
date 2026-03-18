@@ -11,17 +11,21 @@ export default async function RulesPage() {
     if (user) {
         const { data } = await supabase
             .from('profiles')
-            .select('display_name, is_admin')
+            .select('display_name, nickname, is_admin, avatar_url')
             .eq('id', user.id)
             .single();
         profile = data;
     }
 
     return (
-        <div className="flex min-h-screen bg-background text-white font-body">
-            {profile && <Sidebar isAdmin={profile.is_admin} displayName={profile.display_name} />}
-            
-            <main className={`flex-1 ${profile ? 'lg:ml-64' : ''} p-4 md:p-8`}>
+        <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
+            {profile && <Sidebar 
+                isAdmin={profile.is_admin} 
+                displayName={profile.nickname || profile.display_name} 
+                avatarUrl={profile.avatar_url}
+                nickname={profile.nickname || ''}
+            />}
+            <main className="flex-1 overflow-y-auto p-6 md:p-12 relative flex flex-col items-center">
                 <div className="max-w-4xl mx-auto space-y-12 pb-20">
                     
                     {/* Header */}

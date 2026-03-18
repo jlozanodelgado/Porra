@@ -8,6 +8,7 @@ import { Trash2 } from 'lucide-react';
 interface User {
     id: string;
     display_name: string;
+    nickname: string | null;
     is_paid: boolean;
     total_points: number;
     created_at: string;
@@ -53,7 +54,8 @@ export default function AdminUserList({ users }: { users: User[] }) {
             {users.map((u) => (
                 <div key={u.id} className="bg-black/30 rounded-lg p-4 flex justify-between items-center border border-white/5 group">
                     <div className="flex-1">
-                        <p className="font-semibold text-white">{u.display_name}</p>
+                        <p className="font-semibold text-white">{u.nickname || u.display_name}</p>
+                        {u.nickname && <p className="text-xs text-gray-500">{u.display_name}</p>}
                         <p className="text-xs text-gray-400">
                             Puntos: {u.total_points} — {u.is_paid ? '✅ Pagado' : '⛔ No ha pagado'}
                         </p>

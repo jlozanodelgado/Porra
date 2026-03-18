@@ -14,9 +14,9 @@ export default async function UserPredictionsPage({ params }: { params: { userId
     if (!viewer) redirect('/login');
 
     // 2. Obtener perfil del usuario que estamos viendo
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
         .from('profiles')
-        .select('display_name, nickname, is_admin, total_points')
+        .select('display_name, nickname, is_admin, total_points, avatar_url')
         .eq('id', userId)
         .single();
 
@@ -25,12 +25,17 @@ export default async function UserPredictionsPage({ params }: { params: { userId
     // 3. Obtener perfil del espectador (para el Sidebar)
     const { data: viewerProfile } = await supabase
         .from('profiles')
-        .select('is_admin, display_name')
+        .select('is_admin, display_name, nickname, avatar_url')
         .eq('id', viewer.id)
         .single();
 
     const isAdminViewer = viewerProfile?.is_admin || false;
-    const viewerDisplayName = viewerProfile?.display_name || 'Usuario';
+    const viewerDisplayName = viewerProfile?.nickname || viewerProfile?.display_name || 'Usuario';
+    const viewerAvatarUrl = viewerProfile?.avatar_url;
+    const viewerNickname = viewerProfile?.nickname || '';
+    
+    const profileName = profile?.nickname || profile?.display_name || 'Usuario';
+    const profileAvatarUrl = profile?.avatar_url;
 
     // 4. Obtener predicciones del usuario
     const { data: predictions } = await supabase
@@ -62,8 +67,8 @@ export default async function UserPredictionsPage({ params }: { params: { userId
 
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
-            <Sidebar isAdmin={isAdminViewer} displayName={viewerDisplayName} />
-            <main className="flex-1 overflow-y-auto p-6">
+            <Sidebar isAdmin={isAdminViewer} displayName={viewerDisplayName} avatarUrl={viewerAvatarUrl} nickname={viewerNickname} />
+            <main className="flex-1 overflow-y-auto p-6 md:p-12 relative">
                 <header className="mb-6 max-w-5xl mx-auto">
                     <a href="/leaderboard" className="text-[var(--color-neon-cyan)] hover:underline font-semibold text-sm flex items-center gap-1">
                         &larr; Volver a Clasificación
@@ -75,14 +80,18 @@ export default async function UserPredictionsPage({ params }: { params: { userId
                         <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-neon-purple)]/20 filter blur-[80px] rounded-full -mr-20 -mt-20"></div>
                         
                         <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[var(--color-neon-purple)] to-[var(--color-neon-cyan)] p-1">
-                                <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
-                                    <User size={48} className="text-white opacity-50" />
+                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[var(--color-neon-purple)] to-[var(--color-neon-cyan)] p-1 shrink-0">
+                                <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
+                                    <img 
+                                        src={profileAvatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(profile?.nickname || userId)}`} 
+                                        alt="Avatar" 
+                                        className="w-full h-full object-cover"
+                                    />
                                 </div>
                             </div>
                             <div className="text-center md:text-left">
                                 <h1 className="text-3xl font-heading font-black text-white uppercase tracking-tight flex items-center gap-3">
-                                    {profile.display_name}
+                                    {profileName}
                                     {profile.is_admin && <ShieldCheck size={20} className="text-[var(--color-neon-red)]" />}
                                 </h1>
                                 <p className="text-gray-400 font-medium">@{profile.nickname || userId.substring(0,8)}</p>
