@@ -28,11 +28,22 @@ export default function LoginPage() {
         const email = emailData as string;
 
         // Iniciar sesión con Supabase Auth usando el correo y la contraseña
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
             setError('Contraseña incorrecta.');
-        } else {
-            router.push('/dashboard');
+        } else if (data.user) {
+            // Verificar si el usuario está aprobado
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('is_paid, is_admin')
+                .eq('id', data.user.id)
+                .single();
+
+            if (profile?.is_paid || profile?.is_admin) {
+                router.push('/dashboard');
+            } else {
+                router.push('/pending-approval');
+            }
         }
     };
 

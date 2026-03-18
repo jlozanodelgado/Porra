@@ -23,7 +23,7 @@ export default function RegisterPage() {
             setLoading(false);
         } else {
             setSuccess(true);
-            setTimeout(() => router.push('/dashboard'), 2000);
+            setTimeout(() => router.push('/pending-approval'), 2000);
         }
     };
 
@@ -39,7 +39,7 @@ export default function RegisterPage() {
 
                 {success ? (
                     <div className="text-center text-[var(--color-neon-green)] mb-4">
-                        ¡Registro exitoso! Redirigiendo al Dashboard...
+                        ¡Registro exitoso! Tu cuenta está pendiente de aprobación. Redirigiendo...
                     </div>
                 ) : (
                     <form onSubmit={handleRegister} className="flex flex-col gap-4 font-body">
