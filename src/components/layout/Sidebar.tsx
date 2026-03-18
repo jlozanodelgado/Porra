@@ -18,7 +18,9 @@ import {
     UserMinus,
     UserCheck,
     Search,
-    User
+    User,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -54,6 +56,7 @@ const adminItems = [
 export default function Sidebar({ isAdmin, displayName, avatarUrl, nickname }: SidebarProps) {
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
     const router = useRouter();
     const supabase = createClient();
 
@@ -67,39 +70,50 @@ export default function Sidebar({ isAdmin, displayName, avatarUrl, nickname }: S
     const NavContent = () => (
         <div className="flex flex-col h-full">
             {/* Logo / Header */}
-            <div className="p-5 border-b border-white/10">
-                <Link href="/" className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-neon-green)] to-[var(--color-neon-cyan)] flex items-center justify-center shadow-[0_0_12px_rgba(57,255,20,0.4)]">
+            <div className={`p-5 border-b border-white/10 flex items-center justify-between ${isCollapsed ? 'justify-center' : ''}`}>
+                <Link href="/" className="flex items-center gap-2 overflow-hidden">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-neon-green)] to-[var(--color-neon-cyan)] flex items-center justify-center shadow-[0_0_12px_rgba(57,255,20,0.4)] shrink-0">
                         <Home size={16} className="text-black" />
                     </div>
-                    <span className="font-heading font-bold text-white text-sm uppercase tracking-wider">
-                        Mundial 2026
-                    </span>
+                    {!isCollapsed && (
+                        <span className="font-heading font-bold text-white text-sm uppercase tracking-wider truncate">
+                            Mundial 2026
+                        </span>
+                    )}
                 </Link>
+                {/* Desktop Collapse Toggle */}
+                <button 
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className="hidden lg:flex w-6 h-6 items-center justify-center rounded-md bg-white/5 border border-white/10 text-gray-400 hover:text-[var(--color-neon-cyan)] transition-colors"
+                >
+                    {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                </button>
             </div>
 
             {/* User Info */}
-            <Link href="/profile" className="px-5 py-6 border-b border-white/5 flex items-center gap-3 hover:bg-white/5 transition-colors group">
-                <div className="w-10 h-10 rounded-full border border-[var(--color-neon-cyan)]/30 overflow-hidden bg-white/5 shadow-[0_0_10px_rgba(0,255,255,0.1)] group-hover:border-[var(--color-neon-cyan)] transition-all">
+            <Link href="/profile" className={`px-5 py-6 border-b border-white/5 flex items-center gap-3 hover:bg-white/5 transition-colors group ${isCollapsed ? 'justify-center px-0' : ''}`}>
+                <div className="w-10 h-10 rounded-full border border-[var(--color-neon-cyan)]/30 overflow-hidden bg-white/5 shadow-[0_0_10px_rgba(0,255,255,0.1)] group-hover:border-[var(--color-neon-cyan)] transition-all shrink-0">
                     <img 
                         src={avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(nickname)}`} 
                         alt="Avatar" 
                         className="w-full h-full object-cover"
                     />
                 </div>
-                <div className="flex-1 overflow-hidden">
-                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black group-hover:text-[var(--color-neon-cyan)] transition-colors">Jugador</p>
-                    <p className="text-sm text-white font-bold truncate leading-none mt-1">{displayName}</p>
-                    {isAdmin && (
-                        <span className="inline-block mt-1 text-[8px] px-1.5 py-0 rounded bg-[var(--color-neon-red)]/20 text-[var(--color-neon-red)] font-black uppercase">
-                            Admin
-                        </span>
-                    )}
-                </div>
+                {!isCollapsed && (
+                    <div className="flex-1 overflow-hidden">
+                        <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black group-hover:text-[var(--color-neon-cyan)] transition-colors">Jugador</p>
+                        <p className="text-sm text-white font-bold truncate leading-none mt-1">{displayName}</p>
+                        {isAdmin && (
+                            <span className="inline-block mt-1 text-[8px] px-1.5 py-0 rounded bg-[var(--color-neon-red)]/20 text-[var(--color-neon-red)] font-black uppercase">
+                                Admin
+                            </span>
+                        )}
+                    </div>
+                )}
             </Link>
 
             {/* Navigation */}
-            <nav className="flex-1 py-4 overflow-y-auto">
+            <nav className="flex-1 py-4 overflow-y-auto scrollbar-hide">
                 <ul className="flex flex-col gap-1 px-3">
                     {allItems.map((item) => {
                         const isActive = item.href === '/dashboard'
@@ -112,20 +126,21 @@ export default function Sidebar({ isAdmin, displayName, avatarUrl, nickname }: S
                                 <Link
                                     href={item.href}
                                     onClick={() => setMobileOpen(false)}
-                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive
+                                    title={isCollapsed ? item.label : ''}
+                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isCollapsed ? 'justify-center px-0' : ''} ${isActive
                                         ? 'bg-[var(--color-neon-cyan)]/15 text-[var(--color-neon-cyan)] shadow-[inset_0_0_20px_rgba(0,255,255,0.05)]'
                                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                                         }`}
                                 >
                                     <Icon
-                                        size={18}
-                                        className={`transition-all ${isActive
+                                        size={20}
+                                        className={`transition-all shrink-0 ${isActive
                                             ? 'text-[var(--color-neon-cyan)] drop-shadow-[0_0_6px_rgba(0,255,255,0.5)]'
                                             : 'text-gray-500 group-hover:text-gray-300'
                                             }`}
                                     />
-                                    {item.label}
-                                    {isActive && (
+                                    {!isCollapsed && <span>{item.label}</span>}
+                                    {!isCollapsed && isActive && (
                                         <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--color-neon-cyan)] shadow-[0_0_6px_var(--color-neon-cyan)]"></span>
                                     )}
                                 </Link>
@@ -139,10 +154,11 @@ export default function Sidebar({ isAdmin, displayName, avatarUrl, nickname }: S
             <div className="p-4 border-t border-white/10">
                 <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-[var(--color-neon-red)] hover:bg-[var(--color-neon-red)]/10 transition-all w-full"
+                    title={isCollapsed ? "Cerrar Sesión" : ""}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-[var(--color-neon-red)] hover:bg-[var(--color-neon-red)]/10 transition-all w-full ${isCollapsed ? 'justify-center px-0' : ''}`}
                 >
-                    <LogOut size={18} />
-                    Cerrar Sesión
+                    <LogOut size={20} className="shrink-0" />
+                    {!isCollapsed && <span>Cerrar Sesión</span>}
                 </button>
             </div>
         </div>
@@ -166,10 +182,12 @@ export default function Sidebar({ isAdmin, displayName, avatarUrl, nickname }: S
                 />
             )}
 
-            {/* Sidebar */}
+            {/* Sidebar Desktop (Relative) & Mobile (Fixed) */}
             <aside
-                className={`fixed top-0 left-0 z-40 h-screen w-64 bg-[var(--color-surface)]/95 backdrop-blur-xl border-r border-white/10 transition-transform duration-300 lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'
-                    }`}
+                className={`z-40 h-screen transition-all duration-300 border-r border-white/10 bg-[var(--color-surface)]/95 backdrop-blur-xl 
+                ${mobileOpen ? 'fixed left-0 top-0 w-64 translate-x-0' : 'fixed lg:relative lg:translate-x-0 -translate-x-full lg:left-0'} 
+                ${isCollapsed ? 'lg:w-20' : 'lg:w-64 w-64'}
+                `}
             >
                 <NavContent />
             </aside>

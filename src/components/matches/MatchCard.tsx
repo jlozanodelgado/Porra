@@ -12,6 +12,10 @@ interface MatchCardProps {
     homeGoalsReal?: number | null;
     awayGoalsReal?: number | null;
     status: string;
+    prediction?: {
+        homeGoals: number;
+        awayGoals: number;
+    };
 }
 
 export const MatchCard: React.FC<MatchCardProps> = ({
@@ -22,7 +26,8 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     kickoffTime,
     homeGoalsReal,
     awayGoalsReal,
-    status
+    status,
+    prediction
 }) => {
     const locked = isMatchLocked(kickoffTime);
     const timeStr = formatToColombiaTime(kickoffTime);
@@ -79,6 +84,13 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                     <span className="font-heading font-semibold text-sm text-center line-clamp-1">{awayTeam}</span>
                 </div>
             </div>
+
+            {prediction && (
+                <div className="mt-4 px-4 py-2 rounded-xl bg-[var(--color-neon-cyan)]/10 border border-[var(--color-neon-cyan)]/20 flex items-center gap-3">
+                    <span className="text-[10px] uppercase tracking-widest font-black text-[var(--color-neon-cyan)] opacity-70">Tu Marcador:</span>
+                    <span className="text-xl font-heading font-black text-white">{prediction.homeGoals} - {prediction.awayGoals}</span>
+                </div>
+            )}
 
             <div className="mt-6 pt-4 border-t border-white/10 w-full text-center text-sm font-body text-gray-400">
                 {timeStr}

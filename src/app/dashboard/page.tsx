@@ -29,6 +29,12 @@ export default async function DashboardPage() {
     away:away_team_id (name, flag_url)
   `).order('kickoff_time', { ascending: true });
 
+    // Obtener las predicciones del usuario para estos partidos
+    const { data: userPredictions } = await supabase
+        .from('predictions')
+        .select('match_id, home_goals_pred, away_goals_pred')
+        .eq('user_id', user.id);
+
     if (error) {
         console.error('Error fetching matches:', error);
     }
@@ -56,17 +62,13 @@ export default async function DashboardPage() {
                         </div>
                         <div className="hidden lg:flex flex-col gap-3 ml-auto">
                              <a href="/profile" className="px-6 py-3 rounded-xl bg-[var(--color-neon-cyan)]/10 border border-[var(--color-neon-cyan)]/30 text-sm font-bold text-[var(--color-neon-cyan)] hover:bg-[var(--color-neon-cyan)] hover:text-black transition-all uppercase tracking-widest text-center">
-                                Mi Perfil
+                                 Mi Perfil
                              </a>
                              <a href="/leaderboard" className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-bold text-gray-400 hover:bg-white/10 hover:text-white transition-all uppercase tracking-widest text-center">
-                                Ver Posiciones
+                                 Ver Posiciones
                              </a>
                         </div>
                     </header>
-
-                    <div className="mb-12">
-                        <MenuHub isAdmin={isAdmin} />
-                    </div>
 
                     <div className="flex justify-between items-center mb-8">
                         <h2 className="text-2xl font-bold font-heading text-white uppercase tracking-tight flex items-center gap-2">
@@ -76,21 +78,28 @@ export default async function DashboardPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {matches && matches.length > 0 ? matches.map((m: any) => (
-                            <a key={m.id} href={`/match/${m.id}`} className="block transform hover:scale-[1.02] transition-all">
-                                <MatchCard
-                                    id={m.id}
-                                    homeTeam={m.home?.name || 'Local'}
-                                    awayTeam={m.away?.name || 'Visitante'}
-                                    homeFlag={m.home?.flag_url || ''}
-                                    awayFlag={m.away?.flag_url || ''}
-                                    kickoffTime={m.kickoff_time}
-                                    status={m.status}
-                                    homeGoalsReal={m.home_goals_real}
-                                    awayGoalsReal={m.away_goals_real}
-                                />
-                            </a>
-                        )) : (
+                        {matches && matches.length > 0 ? matches.map((m: any) => {
+                            const prediction = userPredictions?.find(p => p.match_id === m.id);
+                            return (
+                                <a key={m.id} href={`/match/${m.id}`} className="block transform hover:scale-[1.02] transition-all">
+                                    <MatchCard
+                                        id={m.id}
+                                        homeTeam={m.home?.name || 'Local'}
+                                        awayTeam={m.away?.name || 'Visitante'}
+                                        homeFlag={m.home?.flag_url || ''}
+                                        awayFlag={m.away?.flag_url || ''}
+                                        kickoffTime={m.kickoff_time}
+                                        status={m.status}
+                                        homeGoalsReal={m.home_goals_real}
+                                        awayGoalsReal={m.away_goals_real}
+                                        prediction={prediction ? {
+                                            homeGoals: prediction.home_goals_pred,
+                                            awayGoals: prediction.away_goals_pred
+                                        } : undefined}
+                                    />
+                                </a>
+                            );
+                        }) : (
                             <div className="col-span-full text-center text-gray-500 italic py-20 bg-white/5 rounded-2xl border border-dashed border-white/10">
                                 Aún no hay partidos registrados en la base de datos.
                             </div>
