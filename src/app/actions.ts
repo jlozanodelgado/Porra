@@ -247,15 +247,21 @@ export async function deleteUser(userId: string) {
         .single()
 
     if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+    
+    // 1. Eliminar pronósticos del usuario primero para evitar errores de llave foránea
+    const { error: predError } = await supabase.from('predictions').delete().eq('user_id', userId)
+    if (predError) {
+        console.error('Error deleting user predictions:', predError)
+        return { error: 'No se pudieron eliminar los pronósticos del usuario.' }
+    }
 
+    // 2. Eliminar el perfil
     // NOTA: Para eliminar del Auth de Supabase se requiere Service Role.
-    // Aquí eliminamos el perfil; si necesitas eliminar la cuenta completa,
-    // se requiere una configuración adicional o Edge Function.
     const { error } = await supabase.from('profiles').delete().eq('id', userId)
 
     if (error) {
-        console.error('Error deleting user:', error)
-        return { error: 'Error al eliminar el usuario.' }
+        console.error('Error deleting user profile:', error)
+        return { error: 'Error al eliminar el perfil del usuario.' }
     }
 
     return { success: true }
