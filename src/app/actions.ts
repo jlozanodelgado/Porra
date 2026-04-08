@@ -251,17 +251,28 @@ export async function deleteUser(userId: string) {
     // 1. Eliminar pronósticos del usuario primero para evitar errores de llave foránea
     const { error: predError } = await supabase.from('predictions').delete().eq('user_id', userId)
     if (predError) {
-        console.error('Error deleting user predictions:', predError)
-        return { error: 'No se pudieron eliminar los pronósticos del usuario.' }
+        console.error('DEBUG - Error deleting user predictions:', {
+            message: predError.message,
+            code: predError.code,
+            details: predError.details,
+            hint: predError.hint,
+            userId
+        })
+        return { error: `Error DB (Pronósticos): ${predError.message}` }
     }
 
     // 2. Eliminar el perfil
-    // NOTA: Para eliminar del Auth de Supabase se requiere Service Role.
     const { error } = await supabase.from('profiles').delete().eq('id', userId)
 
     if (error) {
-        console.error('Error deleting user profile:', error)
-        return { error: 'Error al eliminar el perfil del usuario.' }
+        console.error('DEBUG - Error deleting user profile:', {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint,
+            userId
+        })
+        return { error: `Error DB (Perfil): ${error.message}` }
     }
 
     return { success: true }
