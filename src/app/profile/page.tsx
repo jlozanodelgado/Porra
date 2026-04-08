@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import AvatarUpload from '@/components/profile/AvatarUpload';
 import { User, Mail, Calendar, Award, CreditCard, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import ChangePasswordForm from '@/components/profile/ChangePasswordForm';
 
 export default async function ProfilePage() {
     const supabase = await createClient();
@@ -113,6 +114,9 @@ export default async function ProfilePage() {
                                 </div>
                                 <p className="text-gray-500 text-xs mt-4">Sigue haciendo tus pronósticos para subir en la tabla de posiciones.</p>
                             </div>
+
+                            {/* Cambio de Contraseña */}
+                            <ChangePasswordForm />
                         </div>
                     </div>
                 </div>

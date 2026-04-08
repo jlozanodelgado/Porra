@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { calculatePoints } from '@/utils/scoring'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 
 // ──── REGISTRO ────
 
@@ -388,6 +389,64 @@ export async function deleteMatch(matchId: number) {
         await supabase.from('profiles').update({
             total_points: newTotal
         }).eq('id', userId)
+    }
+
+    return { success: true }
+}
+
+// ──── AUTENTICACIÓN: RECUPERACIÓN DE CONTRASEÑA ────
+
+export async function requestPasswordReset(identifier: string) {
+    const supabase = await createClient()
+    let email = identifier
+
+    // Si no parece un correo, intentamos buscarlo por nickname
+    if (!identifier.includes('@')) {
+        const { data: emailData, error: rpcError } = await supabase.rpc('get_email_by_nickname', {
+            p_nickname: identifier
+        })
+
+        if (rpcError || !emailData) {
+            return { error: 'No se encontró una cuenta con ese apodo o correo.' }
+        }
+        email = emailData as string
+    }
+
+    // Obtener la URL base para el redireccionamiento de forma robusta
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (await headers()).get('origin') || 'http://localhost:3000'
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
+    })
+
+    if (error) {
+        console.error('Error requesting password reset:', error)
+        return { error: 'Error al enviar el correo de recuperación. Inténtalo de nuevo.' }
+    }
+
+    return { success: true }
+}
+
+export async function updatePassword(formData: FormData) {
+    const supabase = await createClient()
+    const password = formData.get('password') as string
+    const confirmPassword = formData.get('confirmPassword') as string
+
+    if (!password || password.length < 6) {
+        return { error: 'La contraseña debe tener al menos 6 caracteres.' }
+    }
+
+    if (password !== confirmPassword) {
+        return { error: 'Las contraseñas no coinciden.' }
+    }
+
+    const { error } = await supabase.auth.updateUser({
+        password: password
+    })
+
+    if (error) {
+        console.error('Error updating password:', error)
+        return { error: 'No se pudo actualizar la contraseña. El enlace puede haber expirado.' }
     }
 
     return { success: true }

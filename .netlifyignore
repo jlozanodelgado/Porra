@@ -1,0 +1,16 @@
+# Ignore documentation and non-build files to save Netlify build credits
+
+# Documentation
+/*.md
+/README.md
+
+# Non-build files
+/test-scoring.mjs
+/tmp/
+/supabase/
+/.vscode/
+
+# Standard ignores (if not handled by .gitignore)
+node_modules/
+.next/
+.env*

@@ -81,6 +81,11 @@ export default function LoginPage() {
                             className="bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--color-neon-cyan)] focus:outline-none focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-colors"
                             placeholder="••••••••"
                         />
+                        <div className="flex justify-end mt-1">
+                            <a href="/forgot-password" className="text-[10px] text-gray-500 hover:text-[var(--color-neon-cyan)] transition-colors uppercase tracking-widest font-black">
+                                ¿Olvidaste tu contraseña?
+                            </a>
+                        </div>
                     </div>
                     {error && <p className="text-[var(--color-neon-red)] text-sm">{error}</p>}
                     <button
