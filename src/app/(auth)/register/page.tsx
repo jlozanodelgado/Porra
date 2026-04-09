@@ -73,6 +73,15 @@ export default function RegisterPage() {
                             />
                         </div>
                         <div className="flex flex-col">
+                            <label className="text-sm text-gray-400 mb-1">URL de la Foto (Opcional)</label>
+                            <input
+                                type="url"
+                                name="avatarUrl"
+                                className="bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--color-neon-cyan)] focus:outline-none transition-colors"
+                                placeholder="https://link-a-tu-foto.com/foto.jpg"
+                            />
+                        </div>
+                        <div className="flex flex-col">
                             <label className="text-sm text-gray-400 mb-1">Correo Electrónico (Oculto en Login)</label>
                             <input
                                 type="email"

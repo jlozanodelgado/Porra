@@ -51,3 +51,35 @@ export async function createClient() {
         }
     )
 }
+
+/**
+ * Cliente con privilegios de Service Role. 
+ * ¡USAR SOLO EN SERVER ACTIONS PROTEGIDAS POR IS_ADMIN!
+ * Salta políticas de RLS.
+ */
+export async function createAdminClient() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl) {
+        throw new Error('Error: Falta la variable NEXT_PUBLIC_SUPABASE_URL en .env.local')
+    }
+    if (!supabaseServiceKey) {
+        throw new Error('Error: Falta la variable SUPABASE_SERVICE_ROLE_KEY en .env.local')
+    }
+
+    return createServerClient<Database>(
+        supabaseUrl,
+        supabaseServiceKey,
+        {
+            cookies: {
+                getAll() {
+                    return []
+                },
+                setAll() {
+                    // El admin client no suele manejar cookies de sesión de usuario
+                },
+            },
+        }
+    )
+}

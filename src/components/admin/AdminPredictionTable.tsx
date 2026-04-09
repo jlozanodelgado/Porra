@@ -40,16 +40,26 @@ export default function AdminPredictionTable({ predictions }: { predictions: Pre
 
     const exportToCSV = () => {
         const headers = ["Jugador", "Partido", "Fecha", "Pred. Local", "Pred. Visita", "Pts Ganados"];
+        
+        // Función para escapar y cuotear campos CSV
+        const escapeCSV = (val: any) => {
+            const str = String(val ?? "");
+            // Reemplazar comillas dobles por dobles-comillas dobles y envolver en comillas
+            return `"${str.replace(/"/g, '""')}"`;
+        };
+
         const rows = filteredPredictions.map(p => [
-            p.profiles.display_name,
-            `${p.matches.home.name} vs ${p.matches.away.name}`,
-            new Date(p.matches.kickoff_time).toLocaleString(),
-            p.home_goals_pred,
-            p.away_goals_pred,
-            p.points_earned
+            escapeCSV(p.profiles.nickname || p.profiles.display_name),
+            escapeCSV(`${p.matches.home.name} vs ${p.matches.away.name}`),
+            escapeCSV(formatToColombiaTime(p.matches.kickoff_time)),
+            escapeCSV(p.home_goals_pred),
+            escapeCSV(p.away_goals_pred),
+            escapeCSV(p.points_earned)
         ]);
 
-        const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+        // Usamos punto y coma (;) como separador para mejor compatibilidad con Excel en muchas regiones
+        // y añadimos el BOM de UTF-8 (\uFEFF) para que Excel reconozca los acentos
+        const csvContent = "\uFEFF" + [headers.map(escapeCSV), ...rows].map(e => e.join(";")).join("\n");
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);

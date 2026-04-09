@@ -1,9 +1,9 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { calculatePoints } from '@/utils/scoring'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 
 // ──── REGISTRO ────
 
@@ -13,6 +13,7 @@ export async function registerUser(formData: FormData) {
     const displayName = formData.get('displayName') as string
     const nickname = formData.get('nickname') as string
     const phone = formData.get('phone') as string
+    const avatarUrl = formData.get('avatarUrl') as string
 
     if (!email || !password || !displayName || !nickname) {
         return { error: 'Todos los campos obligatorios deben ser completados.' }
@@ -39,6 +40,7 @@ export async function registerUser(formData: FormData) {
             display_name: displayName,
             nickname: nickname,
             phone: phone || null,
+            avatar_url: avatarUrl || null,
         })
 
         if (profileError) {
@@ -234,9 +236,8 @@ export async function updateMatchResult(formData: FormData) {
 // ──── ADMIN: ELIMINAR USUARIO ────
 
 export async function deleteUser(userId: string) {
+    // 1. Verificar que el usuario que llama ES ADMIN (con cliente normal)
     const supabase = await createClient()
-
-    // Verificar admin
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'No autenticado.' }
 
@@ -247,34 +248,32 @@ export async function deleteUser(userId: string) {
         .single()
 
     if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
-    
-    // 1. Eliminar pronósticos del usuario primero para evitar errores de llave foránea
-    const { error: predError } = await supabase.from('predictions').delete().eq('user_id', userId)
+
+    // 2. Usar cliente administrativo para saltar RLS y borrar todo
+    const adminSupabase = await createAdminClient()
+
+    // A. Eliminar pronósticos
+    const { error: predError } = await adminSupabase.from('predictions').delete().eq('user_id', userId)
     if (predError) {
-        console.error('DEBUG - Error deleting user predictions:', {
-            message: predError.message,
-            code: predError.code,
-            details: predError.details,
-            hint: predError.hint,
-            userId
-        })
+        console.error('DEBUG - Error deleting user predictions:', predError)
         return { error: `Error DB (Pronósticos): ${predError.message}` }
     }
 
-    // 2. Eliminar el perfil
-    const { error } = await supabase.from('profiles').delete().eq('id', userId)
-
-    if (error) {
-        console.error('DEBUG - Error deleting user profile:', {
-            message: error.message,
-            code: error.code,
-            details: error.details,
-            hint: error.hint,
-            userId
-        })
-        return { error: `Error DB (Perfil): ${error.message}` }
+    // B. Eliminar el perfil
+    const { error: profileError } = await adminSupabase.from('profiles').delete().eq('id', userId)
+    if (profileError) {
+        console.error('DEBUG - Error deleting user profile:', profileError)
+        return { error: `Error DB (Perfil): ${profileError.message}` }
     }
 
+    // C. Eliminar de Supabase Auth (Raíz)
+    const { error: authError } = await adminSupabase.auth.admin.deleteUser(userId)
+    if (authError) {
+        console.error('DEBUG - Error deleting auth user:', authError)
+        // No bloqueamos el éxito si el perfil ya se borró, pero avisamos.
+    }
+
+    revalidatePath('/admin')
     return { success: true }
 }
 
@@ -355,6 +354,77 @@ export async function updateTeam(formData: FormData) {
     return { success: true }
 }
 
+export async function deleteTeam(teamId: number) {
+    const supabase = await createClient()
+
+    // Verificar admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'No autenticado.' }
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+
+    // Usar cliente administrativo para saltar RLS
+    const adminSupabase = await createAdminClient()
+
+    // Intentar eliminar el equipo
+    // NOTA: Si el equipo tiene partidos asociados, esto fallará por FK constraints (comportamiento deseado)
+    const { error } = await adminSupabase.from('teams').delete().eq('id', teamId)
+
+    if (error) {
+        console.error('Error deleting team:', error)
+        if (error.code === '23503') {
+            return { error: 'No se puede eliminar el equipo porque tiene partidos asociados. Elimina primero los partidos.' }
+        }
+        return { error: 'Error al eliminar el equipo.' }
+    }
+
+    revalidatePath('/admin/teams')
+    return { success: true }
+}
+
+export async function bulkUpsertMatches(matchesData: any[]) {
+    const supabase = await createClient()
+
+    // Verificar admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'No autenticado.' }
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+
+    // Preparar datos (convertir ids a número y asegurar UTC)
+    const formattedMatches = matchesData.map(m => ({
+        home_team_id: parseInt(m.homeTeamId),
+        away_team_id: parseInt(m.awayTeamId),
+        kickoff_time: m.kickoffTime,
+        is_playoff: m.isPlayoff === true || m.isPlayoff === 'true',
+        status: 'pending'
+    }));
+
+    // Insertar masivamente
+    const { error } = await supabase.from('matches').insert(formattedMatches)
+
+    if (error) {
+        console.error('Error bulk creating matches:', error)
+        return { error: 'Error al realizar la carga masiva de partidos.' }
+    }
+
+    revalidatePath('/admin/matches')
+    revalidatePath('/dashboard')
+    return { success: true }
+}
+
 export async function deleteMatch(matchId: number) {
     const supabase = await createClient()
 
@@ -430,7 +500,8 @@ export async function requestPasswordReset(identifier: string) {
     }
 
     // Obtener la URL base para el redireccionamiento de forma robusta
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (await headers()).get('origin') || 'http://localhost:3000'
+    const { headers: getHeaders } = await import('next/headers')
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (await getHeaders()).get('origin') || 'http://localhost:3000'
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,

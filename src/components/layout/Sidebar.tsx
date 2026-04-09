@@ -34,7 +34,7 @@ interface SidebarProps {
 
 const participantItems = [
     { href: '/leaderboard', label: 'Clasificación', icon: BarChart3 },
-    { href: '/predictions', label: 'Hoja de Predicciones', icon: ClipboardList },
+    { href: '/predictions', label: 'Predicciones Globales', icon: ClipboardList },
     { href: '/dashboard', label: 'Partidos', icon: Trophy },
     { href: '/teams', label: 'Equipos', icon: Users },
     { href: '/groups', label: 'Grupos', icon: LayoutGrid },
@@ -44,11 +44,12 @@ const participantItems = [
 ];
 
 const adminItems = [
-    { href: '/admin/teams', label: 'Insertar Equipos', icon: Users },
-    { href: '/admin#matches', label: 'Insertar Partidos', icon: Trophy },
-    { href: '/admin#results', label: 'Insertar Marcador', icon: ClipboardList },
-    { href: '/admin#users', label: 'Aprobar Usuarios', icon: UserCheck },
-    { href: '/admin#users', label: 'Borrar Usuario', icon: UserMinus },
+    { href: '/admin', label: 'Dashboard Admin', icon: LayoutGrid },
+    { href: '/admin/teams', label: 'Gestionar Equipos', icon: Users },
+    { href: '/admin/matches', label: 'Gestionar Partidos', icon: Trophy },
+    { href: '/admin/results', label: 'Cargar Marcadores', icon: ClipboardList },
+    { href: '/admin/users', label: 'Gestionar Usuarios', icon: UserCheck },
+    { href: '/admin/predictions', label: 'Transparencia', icon: BarChart3 },
     { href: '/profile', label: 'Mi Perfil', icon: User },
     { href: '/reglas', label: 'Reglas', icon: Shield },
 ];

@@ -1,26 +1,11 @@
 import React from 'react';
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 import AdminTeamForm from '@/components/admin/AdminTeamForm';
-import { ArrowLeft, Users } from 'lucide-react';
-import Link from 'next/link';
+import { Users } from 'lucide-react';
 import EditTeamButton from '@/components/admin/EditTeamButton';
 
 export default async function AdminTeamsPage() {
     const supabase = await createClient();
-
-    // Verificar autenticación
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect('/login');
-
-    // Verificar que es admin
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single();
-
-    if (!profile?.is_admin) redirect('/dashboard');
 
     // Cargar equipos existentes
     const { data: teams } = await supabase
@@ -30,26 +15,20 @@ export default async function AdminTeamsPage() {
         .order('name', { ascending: true });
 
     return (
-        <main className="min-h-screen bg-[var(--color-background)] p-6">
-            <header className="mb-8 max-w-4xl mx-auto flex items-center justify-between">
-                <Link href="/admin" className="flex items-center gap-2 text-[var(--color-neon-cyan)] hover:brightness-125 transition-all font-semibold">
-                    <ArrowLeft size={18} />
-                    <span>Volver al Panel</span>
-                </Link>
-                <div className="flex items-center gap-2 text-white/40 font-heading font-bold text-sm uppercase tracking-widest">
-                    <Users size={16} />
-                    Gestión de Equipos
-                </div>
+        <div className="max-w-6xl mx-auto">
+            <header className="mb-10 text-center text-white/40 font-heading font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2">
+                <Users size={16} />
+                Gestión de Equipos
             </header>
 
-            <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Formulario a la izquierda (1/3) */}
-                <div className="md:col-span-1">
+                <div className="lg:col-span-1">
                     <AdminTeamForm />
                 </div>
 
                 {/* Lista a la derecha (2/3) */}
-                <div className="md:col-span-2">
+                <div className="lg:col-span-2">
                     <div className="bg-[var(--color-surface)]/60 backdrop-blur-md border border-white/10 rounded-2xl p-6">
                         <h2 className="text-xl font-heading font-bold text-white mb-6 flex justify-between items-center">
                             Equipos Registrados
@@ -80,6 +59,6 @@ export default async function AdminTeamsPage() {
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
     );
 }

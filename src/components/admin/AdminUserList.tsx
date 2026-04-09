@@ -51,8 +51,10 @@ export default function AdminUserList({ users }: { users: User[] }) {
 
     return (
         <div className="flex flex-col gap-3">
-            {users.map((u) => (
-                <div key={u.id} className="bg-black/30 rounded-lg p-4 flex justify-between items-center border border-white/5 group">
+            {users
+                .filter(u => feedback[u.id] !== '🗑️ Eliminado')
+                .map((u) => (
+                    <div key={u.id} className="bg-black/30 rounded-lg p-4 flex justify-between items-center border border-white/5 group">
                     <div className="flex-1">
                         <p className="font-semibold text-white">{u.nickname || u.display_name}</p>
                         {u.nickname && <p className="text-xs text-gray-500">{u.display_name}</p>}
