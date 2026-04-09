@@ -137,13 +137,25 @@ export default async function RulesPage() {
                         </div>
                     </section>
 
-                    {/* Important Rules / Ties */}
+                    {/* Important Rules */}
                     <section className="space-y-4">
                         <div className="flex items-center gap-3">
                             <Info className="text-white" size={24} />
-                            <h2 className="text-2xl font-heading font-bold uppercase italic">Reglas de Empate</h2>
+                            <h2 className="text-2xl font-heading font-bold uppercase italic">Reglas</h2>
                         </div>
-                        
+
+                        <div className="bg-[var(--color-neon-cyan)]/10 border border-[var(--color-neon-cyan)]/20 rounded-2xl p-6 flex gap-4 items-start">
+                            <AlertCircle className="text-[var(--color-neon-cyan)] shrink-0 mt-1" size={24} />
+                            <div className="space-y-3">
+                                <p className="text-white font-medium">Recordatorio importante:</p>
+                                <ul className="list-disc list-inside space-y-2 text-gray-300 text-sm">
+                                    <li>Si un usuario <span className="text-white font-bold">no ingresa ninguna predicción</span> para un partido, <span className="text-[var(--color-neon-cyan)] font-bold">no se sumará ningún punto</span> por ese partido.</li>
+                                    <li>Las reglas de bloqueo son estrictas: No se pueden realizar o editar pronósticos faltando <span className="text-white font-bold">15 minutos o menos</span> para el inicio del partido.</li>
+                                    <li>Para los partidos de <span className="text-white font-bold">Eliminación Directa (Playoffs)</span>, solo será válido el marcador de los <span className="text-[var(--color-neon-cyan)] font-bold">90 minutos reglamentarios</span> (incluyendo el tiempo añadido por el juez). No se tendrá en cuenta el resultado de la prórroga ni de la tanda de penaltis.</li>
+                                </ul>
+                            </div>
+                        </div>
+
                         <div className="bg-[var(--color-neon-red)]/10 border border-[var(--color-neon-red)]/20 rounded-2xl p-6 flex gap-4 items-start">
                             <AlertCircle className="text-[var(--color-neon-red)] shrink-0 mt-1" size={24} />
                             <div className="space-y-3">
@@ -151,8 +163,6 @@ export default async function RulesPage() {
                                 <ul className="list-disc list-inside space-y-2 text-gray-300 text-sm">
                                     <li>Si existe un <span className="text-white font-bold">empate en el 1er lugar</span>, los ganadores se dividirán el premio (70% + 10%) y <span className="text-[var(--color-neon-red)] font-bold">se anulará el 2do puesto</span>.</li>
                                     <li>De la misma manera, si existe un <span className="text-white font-bold">empate en el 2do lugar</span>, se repartirán el premio correspondiente y <span className="text-[var(--color-neon-red)] font-bold">se anulará el 3er puesto</span>.</li>
-                                    <li>Para los partidos de <span className="text-white font-bold">Eliminación Directa (Playoffs)</span>, solo será válido el marcador de los <span className="text-[var(--color-neon-cyan)] font-bold">90 minutos reglamentarios</span> (incluyendo el tiempo añadido por el juez). No se tendrá en cuenta el resultado de la prórroga ni de la tanda de penaltis.</li>
-                                    <li>Las reglas de bloqueo son estrictas: No se pueden realizar o editar pronósticos faltando <span className="text-white font-bold">15 minutos o menos</span> para el inicio del partido.</li>
                                 </ul>
                             </div>
                         </div>
