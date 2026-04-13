@@ -14,6 +14,7 @@ export async function registerUser(formData: FormData) {
     const nickname = formData.get('nickname') as string
     const phone = formData.get('phone') as string
     const avatarUrl = formData.get('avatarUrl') as string
+    const porraId = formData.get('porraId') as string
 
     if (!email || !password || !displayName || !nickname) {
         return { error: 'Todos los campos obligatorios deben ser completados.' }
@@ -41,6 +42,7 @@ export async function registerUser(formData: FormData) {
             nickname: nickname,
             phone: phone || null,
             avatar_url: avatarUrl || null,
+            porra_id: porraId || null,
         })
 
         if (profileError) {
@@ -49,6 +51,130 @@ export async function registerUser(formData: FormData) {
         }
     }
 
+    return { success: true }
+}
+
+// ──── ADMIN: GESTIÓN DE PORRAS ────
+
+export async function createPorra(formData: FormData) {
+    const supabase = await createClient()
+
+    // Verificar admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'No autenticado.' }
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+
+    const name = formData.get('name') as string
+    const slug = formData.get('slug') as string
+    const logoUrl = formData.get('logoUrl') as string
+    const primaryColor = formData.get('primaryColor') as string
+    const secondaryColor = formData.get('secondaryColor') as string
+
+    if (!name || !slug) {
+        return { error: 'Nombre y slug son obligatorios.' }
+    }
+
+    const { error } = await supabase.from('porras').insert({
+        name,
+        slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+        logo_url: logoUrl || null,
+        primary_color: primaryColor || '#00ff00',
+        secondary_color: secondaryColor || '#00ffff',
+    })
+
+    if (error) {
+        console.error('Error creating porra:', error)
+        return { error: 'Error al crear la porra. El slug puede ya existir.' }
+    }
+
+    revalidatePath('/admin/porras')
+    return { success: true }
+}
+
+export async function updatePorra(formData: FormData) {
+    const supabase = await createClient()
+
+    // Verificar admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'No autenticado.' }
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+
+    const porraId = formData.get('porraId') as string
+    const name = formData.get('name') as string
+    const slug = formData.get('slug') as string
+    const logoUrl = formData.get('logoUrl') as string
+    const primaryColor = formData.get('primaryColor') as string
+    const secondaryColor = formData.get('secondaryColor') as string
+
+    if (!porraId || !name || !slug) {
+        return { error: 'ID, nombre y slug son obligatorios.' }
+    }
+
+    const { error } = await supabase.from('porras').update({
+        name,
+        slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+        logo_url: logoUrl || null,
+        primary_color: primaryColor || '#00ff00',
+        secondary_color: secondaryColor || '#00ffff',
+    }).eq('id', porraId)
+
+    if (error) {
+        console.error('Error updating porra:', error)
+        return { error: 'Error al actualizar la porra.' }
+    }
+
+    revalidatePath('/admin/porras')
+    return { success: true }
+}
+
+export async function deletePorra(porraId: string) {
+    const supabase = await createClient()
+
+    // Verificar admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'No autenticado.' }
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+
+    // Verificar que no haya usuarios asociados
+    const { data: users } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('porra_id', porraId)
+        .limit(1)
+
+    if (users && users.length > 0) {
+        return { error: 'No se puede eliminar la porra porque tiene usuarios asociados. Elimina o reasigna los usuarios primero.' }
+    }
+
+    const { error } = await supabase.from('porras').delete().eq('id', porraId)
+
+    if (error) {
+        console.error('Error deleting porra:', error)
+        return { error: 'Error al eliminar la porra.' }
+    }
+
+    revalidatePath('/admin/porras')
     return { success: true }
 }
 
@@ -313,6 +439,7 @@ export async function createTeam(formData: FormData) {
         return { error: 'Error al crear el equipo.' }
     }
 
+    revalidatePath('/admin/teams')
     return { success: true }
 }
 
@@ -351,6 +478,7 @@ export async function updateTeam(formData: FormData) {
         return { error: 'Error al actualizar el equipo.' }
     }
 
+    revalidatePath('/admin/teams')
     return { success: true }
 }
 

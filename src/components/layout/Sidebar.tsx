@@ -45,6 +45,7 @@ const participantItems = [
 
 const adminItems = [
     { href: '/admin', label: 'Dashboard Admin', icon: LayoutGrid },
+    { href: '/admin/porras', label: 'Gestionar Porras', icon: Shield },
     { href: '/admin/teams', label: 'Gestionar Equipos', icon: Users },
     { href: '/admin/matches', label: 'Gestionar Partidos', icon: Trophy },
     { href: '/admin/results', label: 'Cargar Marcadores', icon: ClipboardList },

@@ -40,15 +40,21 @@ export default async function PredictionsPage() {
     // 2. Obtener todas las predicciones para esos partidos (solo de usuarios no-admin)
     const matchIds = matches?.map(m => m.id) || [];
     
-    const { data: predictions } = await supabase
-        .from('predictions')
-        .select(`
-            *,
-            profiles!inner(display_name, nickname, is_admin, avatar_url)
-        `)
-        .in('match_id', matchIds)
-        .eq('profiles.is_admin', false)
-        .order('updated_at', { ascending: false });
+    let predictions: any[] = [];
+    
+    if (matchIds.length > 0) {
+        const { data } = await supabase
+            .from('predictions')
+            .select(`
+                *,
+                profiles!inner(display_name, nickname, is_admin, avatar_url)
+            `)
+            .in('match_id', matchIds)
+            .eq('profiles.is_admin', false)
+            .order('updated_at', { ascending: false });
+            
+        predictions = data || [];
+    }
 
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">

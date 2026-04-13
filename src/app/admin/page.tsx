@@ -1,6 +1,6 @@
 import React from 'react';
 import { createClient } from '@/lib/supabase/server';
-import { Users, Trophy, ClipboardList, ShieldCheck, CreditCard, Clock } from 'lucide-react';
+import { Users, Trophy, ClipboardList, ShieldCheck, CreditCard, Clock, Layers } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function AdminDashboardPage() {
@@ -30,15 +30,20 @@ export default async function AdminDashboardPage() {
         .select('*', { count: 'exact', head: true })
         .neq('status', 'finished');
 
+    const { count: totalPorras } = await supabase
+        .from('porras')
+        .select('*', { count: 'exact', head: true });
+
     const stats = [
         { label: 'Usuarios Totales', value: totalUsers || 0, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
         { label: 'Pagos Confirmados', value: paidUsers || 0, icon: CreditCard, color: 'text-[var(--color-neon-green)]', bg: 'bg-[var(--color-neon-green)]/10' },
+        { label: 'Porras Activas', value: totalPorras || 0, icon: Layers, color: 'text-[var(--color-neon-red)]', bg: 'bg-[var(--color-neon-red)]/10' },
         { label: 'Partidos Totales', value: totalMatches || 0, icon: Trophy, color: 'text-[var(--color-neon-purple)]', bg: 'bg-[var(--color-neon-purple)]/10' },
         { label: 'Partidos Finalizados', value: finishedMatches || 0, icon: ShieldCheck, color: 'text-[var(--color-neon-cyan)]', bg: 'bg-[var(--color-neon-cyan)]/10' },
-        { label: 'Pendientes por Jugar', value: pendingMatches || 0, icon: Clock, color: 'text-[var(--color-neon-red)]', bg: 'bg-[var(--color-neon-red)]/10' },
     ];
 
     const adminLinks = [
+        { href: '/admin/porras', label: 'Gestionar Porras', description: 'Crear y editar porras para empresas', icon: Layers, color: 'border-[var(--color-neon-red)]/30', hover: 'hover:border-[var(--color-neon-red)]/60' },
         { href: '/admin/users', label: 'Gestionar Usuarios', description: 'Aprobar pagos y administrar perfiles', icon: Users, color: 'border-[var(--color-neon-red)]/30', hover: 'hover:border-[var(--color-neon-red)]/60' },
         { href: '/admin/matches', label: 'Configurar Partidos', description: 'Crear encuentros y editar horarios', icon: Trophy, color: 'border-[var(--color-neon-purple)]/30', hover: 'hover:border-[var(--color-neon-purple)]/60' },
         { href: '/admin/results', label: 'Cargar Resultados', description: 'Ingresar marcadores y calcular puntos', icon: ClipboardList, color: 'border-[var(--color-neon-cyan)]/30', hover: 'hover:border-[var(--color-neon-cyan)]/60' },

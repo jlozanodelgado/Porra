@@ -6,20 +6,42 @@ export const revalidate = 60; // 1 minute cache via nextjs
 const PAGE_SIZE = 15;
 
 export default async function LeaderboardPage(props: {
-    searchParams: Promise<{ page?: string }>
+    searchParams: Promise<{ page?: string; porra_id?: string }>
 }) {
     const searchParams = await props.searchParams;
     const page = parseInt(searchParams.page || '1');
+    const porraId = searchParams.porra_id || null;
     const currentPage = isNaN(page) || page < 1 ? 1 : page;
     const offset = (currentPage - 1) * PAGE_SIZE;
 
     const supabase = await createClient();
 
-    // 1. Obtener los usuarios para la página actual y el conteo total
-    const { data: users, error, count } = await supabase
+    // Obtener perfil del usuario actual para saber su porra_id
+    const { data: { user } } = await supabase.auth.getUser();
+    let userPorraId = porraId;
+
+    if (!userPorraId && user) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('porra_id')
+            .eq('id', user.id)
+            .single();
+        userPorraId = profile?.porra_id || null;
+    }
+
+    // Construir query con filtro de porra
+    let query = supabase
         .from('profiles')
-        .select('id, display_name, nickname, avatar_url, total_points, is_paid', { count: 'exact' })
-        .eq('is_admin', false)
+        .select('id, display_name, nickname, avatar_url, total_points, is_paid, porra_id', { count: 'exact' })
+        .eq('is_admin', false);
+
+    if (userPorraId) {
+        query = query.eq('porra_id', userPorraId);
+    } else {
+        query = query.is('porra_id', null);
+    }
+
+    const { data: users, error, count } = await query
         .order('total_points', { ascending: false })
         .range(offset, offset + PAGE_SIZE - 1);
 
@@ -34,11 +56,19 @@ export default async function LeaderboardPage(props: {
     // Para que el rank sea correcto en páginas avanzadas, consultamos cuántos tienen puntaje estrictamente mayor al primero de la lista
     let usersWithRank: any[] = [];
     if (users && users.length > 0) {
-        const { count: usersAbove } = await supabase
+        let usersAboveQuery = supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true })
             .eq('is_admin', false)
             .gt('total_points', users[0].total_points);
+
+        if (userPorraId) {
+            usersAboveQuery = usersAboveQuery.eq('porra_id', userPorraId);
+        } else {
+            usersAboveQuery = usersAboveQuery.is('porra_id', null);
+        }
+
+        const { count: usersAbove } = await usersAboveQuery;
 
         let currentRank = (usersAbove || 0) + 1;
         

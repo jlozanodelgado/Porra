@@ -8,7 +8,7 @@ export default async function AdminUsersPage() {
     // Cargar usuarios
     const { data: users } = await supabase
         .from('profiles')
-        .select('id, display_name, nickname, is_paid, total_points, created_at')
+        .select('id, display_name, nickname, is_paid, total_points, created_at, porras(id, name, slug)')
         .order('created_at', { ascending: false });
 
     return (

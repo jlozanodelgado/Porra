@@ -35,13 +35,15 @@ export default function PendingApprovalPage() {
                     <p className="text-gray-300 font-medium">
                         Tu cuenta ha sido creada exitosamente, pero aún no tienes acceso completo a la plataforma de pronósticos.
                     </p>
-                    <div className="bg-black/40 border border-white/5 p-6 rounded-2xl text-left flex gap-4 items-start">
-                        <ShieldAlert className="text-[var(--color-neon-cyan)] shrink-0" size={20} />
-                        <div>
-                            <p className="text-xs text-gray-400 uppercase tracking-widest font-black mb-2">¿Por qué veo esto?</p>
-                            <p className="text-sm text-gray-300">
-                                Para participar, tu inscripción debe ser validada por el administrador tras la confirmación del pago.
-                            </p>
+                    <div className="bg-black/40 border border-white/5 p-6 rounded-2xl text-left flex flex-col gap-4">
+                        <div className="flex gap-4 items-start">
+                            <ShieldAlert className="text-[var(--color-neon-cyan)] shrink-0" size={20} />
+                            <div>
+                                <p className="text-xs text-gray-400 uppercase tracking-widest font-black mb-2">¿Por qué veo esto?</p>
+                                <p className="text-sm text-gray-300">
+                                    Para participar, tu inscripción debe ser validada por el administrador tras la confirmación del pago.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
