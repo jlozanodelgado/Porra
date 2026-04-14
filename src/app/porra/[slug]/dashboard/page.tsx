@@ -117,7 +117,7 @@ export default async function PorraDashboardPage({ params }: PorraDashboardPageP
                     </header>
 
                     <DashboardClient
-                        matches={matches || []}
+                        matches={(matches as any) || []}
                         userPredictions={(userPredictions as any) || []}
                         displayName={displayName}
                     />

@@ -67,7 +67,7 @@ export default async function PorraLeaderboardPage({ params, searchParams }: Por
         let currentRank = (usersAbove || 0) + 1;
 
         usersWithRank = users.map((u: any, i: number) => {
-            if (i > 0 && u.total_points < users[i - 1].total_points) {
+            if (i > 0 && (u.total_points ?? 0) < (users[i - 1].total_points ?? 0)) {
                 currentRank = offset + i + 1;
             }
             return { ...u, rank: currentRank };
