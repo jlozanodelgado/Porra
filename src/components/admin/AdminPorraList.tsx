@@ -142,7 +142,7 @@ export default function AdminPorraList({ porras }: AdminPorraListProps) {
                     <div className="bg-[var(--color-surface)] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
                         <h2 className="text-xl font-heading font-bold text-white mb-6">Editar Porra</h2>
 
-                        <form action={handleEdit} className="space-y-4">
+                        <form onSubmit={(e) => { e.preventDefault(); handleEdit(new FormData(e.currentTarget)); }} className="space-y-4">
                             <input type="hidden" name="porraId" value={editingPorra.id} />
 
                             <div>

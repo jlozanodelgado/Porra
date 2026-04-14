@@ -15,6 +15,12 @@ export default async function AdminPorrasPage() {
 
     const porrasList = porras || [];
 
+    // Wrapper void para satisfacer tipado estricto de Next.js 15
+    async function handleCreatePorra(formData: FormData): Promise<void> {
+        'use server';
+        await createPorra(formData);
+    }
+
     return (
         <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-8">
@@ -31,7 +37,7 @@ export default async function AdminPorrasPage() {
                     Crear Nueva Porra
                 </h2>
 
-                <form action={createPorra} className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                <form action={handleCreatePorra} className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                     <div>
                         <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Nombre</label>
                         <input
