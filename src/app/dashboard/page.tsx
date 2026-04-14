@@ -72,7 +72,7 @@ export default async function DashboardPage() {
                     </header>
 
                     <DashboardClient 
-                        matches={matches || []} 
+                        matches={(matches as any) || []} 
                         userPredictions={(userPredictions as any) || []}
                         displayName={displayName}
                     />
