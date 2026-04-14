@@ -151,7 +151,7 @@ export default function AdminMatchForm({ teams, matches }: { teams: Team[]; matc
                                         {m.home?.name || `Equipo ${m.home_team_id}`} vs {m.away?.name || `Equipo ${m.away_team_id}`}
                                     </p>
                                     <p className="text-xs text-gray-400">
-                                        {formatToColombiaTime(m.kickoff_time)} — {m.is_playoff ? '🏆 Playoff' : '⚽ Grupo'} — {m.status}
+                                        {formatToColombiaTime(m.kickoff_time)} — {m.is_playoff ? '🏆 Playoff' : '⚽ Grupo'} — {m.status ?? 'pending'}
                                     </p>
                                 </div>
                                     <div className="flex gap-4">

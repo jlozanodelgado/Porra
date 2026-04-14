@@ -135,7 +135,7 @@ export default function DashboardClient({
                                                     homeFlag={m.home?.flag_url || ''}
                                                     awayFlag={m.away?.flag_url || ''}
                                                     kickoffTime={m.kickoff_time}
-                                                    status={m.status}
+                                                    status={m.status ?? 'pending'}
                                                     homeGoalsReal={m.home_goals_real}
                                                     awayGoalsReal={m.away_goals_real}
                                                     prediction={prediction ? {
@@ -165,7 +165,7 @@ export default function DashboardClient({
                                         homeFlag={m.home?.flag_url || ''}
                                         awayFlag={m.away?.flag_url || ''}
                                         kickoffTime={m.kickoff_time}
-                                        status={m.status}
+                                        status={m.status ?? 'pending'}
                                         homeGoalsReal={m.home_goals_real}
                                         awayGoalsReal={m.away_goals_real}
                                         prediction={prediction ? {
