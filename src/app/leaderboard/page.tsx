@@ -74,7 +74,7 @@ export default async function LeaderboardPage(props: {
         let currentRank = (usersAbove || 0) + 1;
         
         usersWithRank = userList.map((u: any, i: number) => {
-            if (i > 0 && u.total_points < userList[i - 1].total_points) {
+            if (i > 0 && (u.total_points ?? 0) < (userList[i - 1].total_points ?? 0)) {
                 // Si el puntaje es menor al anterior, su puesto es su posición absoluta
                 currentRank = offset + i + 1;
             }
