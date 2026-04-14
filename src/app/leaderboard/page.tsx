@@ -56,11 +56,12 @@ export default async function LeaderboardPage(props: {
     // Para que el rank sea correcto en páginas avanzadas, consultamos cuántos tienen puntaje estrictamente mayor al primero de la lista
     let usersWithRank: any[] = [];
     if (users && users.length > 0) {
+        const userList = users!;
         let usersAboveQuery = supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true })
             .eq('is_admin', false)
-            .gt('total_points', users[0].total_points);
+            .gt('total_points', userList[0].total_points);
 
         if (userPorraId) {
             usersAboveQuery = usersAboveQuery.eq('porra_id', userPorraId);
@@ -72,8 +73,8 @@ export default async function LeaderboardPage(props: {
 
         let currentRank = (usersAbove || 0) + 1;
         
-        usersWithRank = users.map((u: any, i: number) => {
-            if (i > 0 && u.total_points < users[i - 1].total_points) {
+        usersWithRank = userList.map((u: any, i: number) => {
+            if (i > 0 && u.total_points < userList[i - 1].total_points) {
                 // Si el puntaje es menor al anterior, su puesto es su posición absoluta
                 currentRank = offset + i + 1;
             }

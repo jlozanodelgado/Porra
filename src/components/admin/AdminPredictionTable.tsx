@@ -12,12 +12,14 @@ interface Prediction {
     user_id: string;
     profiles: {
         display_name: string;
-        nickname: string| null;
+        nickname: string | null;
         avatar_url: string | null;
+        porras: { name: string } | null;
     };
     matches: {
         id: number;
         kickoff_time: string;
+        status: string;
         home: { name: string };
         away: { name: string };
     };
@@ -26,6 +28,7 @@ interface Prediction {
 export default function AdminPredictionTable({ predictions }: { predictions: Prediction[] }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [matchFilter, setMatchFilter] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all'); // all, pending, finished
 
     const filteredPredictions = predictions.filter(p => {
         const matchesSearch = 
@@ -33,13 +36,19 @@ export default function AdminPredictionTable({ predictions }: { predictions: Pre
             (p.profiles.nickname && p.profiles.nickname.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchName = `${p.matches.home.name} vs ${p.matches.away.name}`.toLowerCase();
         const matchesFilter = matchFilter === '' || matchName.includes(matchFilter.toLowerCase());
-        return matchesSearch && matchesFilter;
+        
+        const matchesStatus = 
+            statusFilter === 'all' || 
+            (statusFilter === 'finished' && p.matches.status === 'finished') ||
+            (statusFilter === 'pending' && p.matches.status !== 'finished');
+
+        return matchesSearch && matchesFilter && matchesStatus;
     }).sort((a, b) => b.points_earned - a.points_earned);
 
     const uniqueMatches = Array.from(new Set(predictions.map(p => `${p.matches.home.name} vs ${p.matches.away.name}`)));
 
     const exportToCSV = () => {
-        const headers = ["Jugador", "Partido", "Fecha", "Pred. Local", "Pred. Visita", "Pts Ganados"];
+        const headers = ["Jugador", "Porra", "Partido", "Fecha", "Pred. Local", "Pred. Visita", "Pts Ganados", "Estado"];
         
         // Función para escapar y cuotear campos CSV
         const escapeCSV = (val: any) => {
@@ -50,11 +59,13 @@ export default function AdminPredictionTable({ predictions }: { predictions: Pre
 
         const rows = filteredPredictions.map(p => [
             escapeCSV(p.profiles.nickname || p.profiles.display_name),
+            escapeCSV(p.profiles.porras?.name || "Principal"),
             escapeCSV(`${p.matches.home.name} vs ${p.matches.away.name}`),
             escapeCSV(formatToColombiaTime(p.matches.kickoff_time)),
             escapeCSV(p.home_goals_pred),
             escapeCSV(p.away_goals_pred),
-            escapeCSV(p.points_earned)
+            escapeCSV(p.points_earned),
+            escapeCSV(p.matches.status === 'finished' ? 'Calificado' : 'Pendiente')
         ]);
 
         // Usamos punto y coma (;) como separador para mejor compatibilidad con Excel en muchas regiones
@@ -97,6 +108,16 @@ export default function AdminPredictionTable({ predictions }: { predictions: Pre
                         ))}
                     </select>
 
+                    <select 
+                        className="flex-1 md:w-40 bg-surface border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-neon-green)]"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                        <option value="all">Todos los estados</option>
+                        <option value="pending">Pendientes de Calificar</option>
+                        <option value="finished">Calificados</option>
+                    </select>
+
                     <button 
                         onClick={exportToCSV}
                         className="flex items-center gap-2 bg-[var(--color-neon-green)]/10 text-[var(--color-neon-green)] border border-[var(--color-neon-green)]/20 px-4 py-2 rounded-lg text-sm font-bold hover:bg-[var(--color-neon-green)]/20 transition-all"
@@ -133,8 +154,17 @@ export default function AdminPredictionTable({ predictions }: { predictions: Pre
                                     </div>
                                 </td>
                                 <td className="px-4 py-3">
-                                    <div className="font-medium text-gray-200">{p.matches.home.name} vs {p.matches.away.name}</div>
-                                    <div className="text-[10px] text-gray-500">{formatToColombiaTime(p.matches.kickoff_time)}</div>
+                                    <div className="flex flex-col">
+                                        <div className="font-medium text-gray-200">{p.matches.home.name} vs {p.matches.away.name}</div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] text-gray-500">{formatToColombiaTime(p.matches.kickoff_time)}</span>
+                                            {p.matches.status === 'finished' ? (
+                                                <span className="text-[8px] px-1.5 py-0.5 rounded bg-gray-500/20 text-gray-400 font-bold uppercase tracking-tighter">Calificado</span>
+                                            ) : (
+                                                <span className="text-[8px] px-1.5 py-0.5 rounded bg-[var(--color-neon-purple)]/20 text-[var(--color-neon-purple)] font-bold uppercase tracking-tighter">Pendiente</span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </td>
                                 <td className="px-4 py-3">
                                     <div className="flex items-center justify-center gap-2">

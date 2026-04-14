@@ -406,9 +406,8 @@ export async function deleteUser(userId: string) {
 // ──── ADMIN: GESTIÓN DE EQUIPOS ────
 
 export async function createTeam(formData: FormData) {
+    // Verificar admin con cliente normal
     const supabase = await createClient()
-
-    // Verificar admin
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'No autenticado.' }
 
@@ -420,6 +419,9 @@ export async function createTeam(formData: FormData) {
 
     if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
 
+    // Usar cliente administrativo para la operación
+    const adminSupabase = await createAdminClient()
+
     const name = formData.get('name') as string
     const flagUrl = formData.get('flagUrl') as string
     const groupName = formData.get('groupName') as string
@@ -428,7 +430,7 @@ export async function createTeam(formData: FormData) {
         return { error: 'Nombre y Grupo son obligatorios.' }
     }
 
-    const { error } = await supabase.from('teams').insert({
+    const { error } = await adminSupabase.from('teams').insert({
         name,
         flag_url: flagUrl,
         group_name: groupName.toUpperCase()
@@ -444,9 +446,8 @@ export async function createTeam(formData: FormData) {
 }
 
 export async function updateTeam(formData: FormData) {
+    // Verificar admin con cliente normal
     const supabase = await createClient()
-
-    // Verificar admin
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'No autenticado.' }
 
@@ -458,6 +459,9 @@ export async function updateTeam(formData: FormData) {
 
     if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
 
+    // Usar cliente administrativo para la operación
+    const adminSupabase = await createAdminClient()
+
     const teamId = formData.get('teamId') as string
     const name = formData.get('name') as string
     const flagUrl = formData.get('flagUrl') as string
@@ -467,7 +471,7 @@ export async function updateTeam(formData: FormData) {
         return { error: 'ID, Nombre y Grupo son obligatorios.' }
     }
 
-    const { error } = await supabase.from('teams').update({
+    const { error } = await adminSupabase.from('teams').update({
         name,
         flag_url: flagUrl,
         group_name: groupName.toUpperCase()

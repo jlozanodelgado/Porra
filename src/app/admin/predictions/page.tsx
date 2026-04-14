@@ -16,8 +16,12 @@ export default async function AdminPredictionsPage() {
             home_goals_pred,
             away_goals_pred,
             points_earned,
-            user_id,
-            profiles(display_name, nickname, avatar_url),
+            profiles(
+                display_name, 
+                nickname, 
+                avatar_url,
+                porras(name)
+            ),
             matches!inner(
                 id,
                 kickoff_time,
