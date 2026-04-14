@@ -343,3 +343,11 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+// ─── Helper types for easy use in components ───────────────────────────────
+export type Match = Database['public']['Tables']['matches']['Row']
+export type Profile = Database['public']['Tables']['profiles']['Row']
+export type Prediction = Database['public']['Tables']['predictions']['Row']
+export type Team = Database['public']['Tables']['teams']['Row']
+export type Porra = Database['public']['Tables']['porras']['Row']
+
