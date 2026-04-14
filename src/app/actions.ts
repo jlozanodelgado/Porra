@@ -328,7 +328,7 @@ export async function updateMatchResult(formData: FormData) {
                 pred.away_goals_pred,
                 homeGoalsReal,
                 awayGoalsReal,
-                match.is_playoff
+                match.is_playoff ?? false
             )
 
             await supabase.from('predictions').update({
