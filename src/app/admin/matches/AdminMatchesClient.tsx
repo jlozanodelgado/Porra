@@ -15,8 +15,8 @@ interface Match {
     home_team_id: number | null;
     away_team_id: number | null;
     kickoff_time: string;
-    is_playoff: boolean;
-    status: string;
+    is_playoff: boolean | null;
+    status: string | null;
     home?: { name: string } | null;
     away?: { name: string } | null;
 }
