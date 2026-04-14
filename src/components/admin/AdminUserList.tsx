@@ -9,9 +9,9 @@ interface User {
     id: string;
     display_name: string;
     nickname: string | null;
-    is_paid: boolean;
-    total_points: number;
-    created_at: string;
+    is_paid: boolean | null;
+    total_points: number | null;
+    created_at: string | null;
     porras?: { id: string, name: string, slug: string } | null;
 }
 
@@ -88,7 +88,7 @@ export default function AdminUserList({ users }: { users: User[] }) {
                                 </div>
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() => handleToggle(u.id, !u.is_paid)}
+                                        onClick={() => handleToggle(u.id, !(u.is_paid ?? false))}
                                         disabled={isPending}
                                         className={`px-3 py-1.5 font-bold rounded transition-all text-xs disabled:opacity-50 ${u.is_paid
                                             ? 'bg-white/5 text-gray-400 hover:bg-white/10'
