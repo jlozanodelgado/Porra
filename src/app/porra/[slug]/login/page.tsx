@@ -46,11 +46,19 @@ export default function PorraLoginPage() {
                 .eq('id', data.user.id)
                 .single();
 
-            // Verificar que el usuario pertenece a esta porra
+            // 1. PRIMERA VALIDACIÓN: Asegurarnos de que el usuario tiene un porra_id
+            if (!profile?.porra_id) {
+                await supabase.auth.signOut();
+                setError('Este usuario no tiene una porra asignada.');
+                setLoading(false);
+                return;
+            }
+
+            // 2. Ahora que sabemos que existe, hacemos la consulta (sin el "?")
             const { data: porra } = await supabase
                 .from('porras')
                 .select('slug')
-                .eq('id', profile?.porra_id)
+                .eq('id', profile.porra_id)
                 .single();
 
             if (porra?.slug !== slug) {
