@@ -77,7 +77,7 @@ export default function AdminPorraList({ porras }: AdminPorraListProps) {
                                 )}
                                 <div className="flex-1">
                                     <h3 className="font-heading font-bold text-white">{porra.name}</h3>
-                                    <a 
+                                    <a
                                         href={`/porra/${porra.slug}`}
                                         target="_blank"
                                         rel="noreferrer"
@@ -183,7 +183,7 @@ export default function AdminPorraList({ porras }: AdminPorraListProps) {
                                     <input
                                         type="color"
                                         name="primaryColor"
-                                        defaultValue={editingPorra.primary_color}
+                                        defaultValue={editingPorra.primary_color || '#00ff00'}
                                         className="w-full h-10 rounded-lg cursor-pointer"
                                     />
                                 </div>
@@ -192,7 +192,7 @@ export default function AdminPorraList({ porras }: AdminPorraListProps) {
                                     <input
                                         type="color"
                                         name="secondaryColor"
-                                        defaultValue={editingPorra.secondary_color}
+                                        defaultValue={editingPorra.secondary_color || '#00ffff'}
                                         className="w-full h-10 rounded-lg cursor-pointer"
                                     />
                                 </div>
