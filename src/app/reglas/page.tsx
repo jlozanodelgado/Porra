@@ -19,15 +19,15 @@ export default async function RulesPage() {
 
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
-            {profile && <Sidebar 
-                isAdmin={profile.is_admin} 
-                displayName={profile.nickname || profile.display_name} 
+            {profile && <Sidebar
+                isAdmin={profile.is_admin ?? false}
+                displayName={profile.nickname || profile.display_name}
                 avatarUrl={profile.avatar_url}
                 nickname={profile.nickname || ''}
             />}
             <main className="flex-1 overflow-y-auto p-6 md:p-12 relative flex flex-col items-center">
                 <div className="max-w-4xl mx-auto space-y-12 pb-20">
-                    
+
                     {/* Header */}
                     <div className="text-center space-y-4 pt-8">
                         <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-[var(--color-neon-cyan)]/10 border border-[var(--color-neon-cyan)]/20 shadow-[0_0_20px_rgba(0,255,255,0.1)] mb-4">
@@ -47,7 +47,7 @@ export default async function RulesPage() {
                             <Target className="text-[var(--color-neon-green)]" size={24} />
                             <h2 className="text-2xl font-heading font-bold uppercase italic">Sistema de Puntuación</h2>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="bg-surface/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
                                 <h3 className="text-[var(--color-neon-green)] font-bold uppercase tracking-wider text-sm">Fase de Grupos</h3>
@@ -111,7 +111,7 @@ export default async function RulesPage() {
                         <div className="bg-surface/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden relative">
                             <div className="absolute -top-24 -right-24 w-64 h-64 bg-[var(--color-neon-cyan)]/10 rounded-full blur-[80px]" />
                             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-[var(--color-neon-green)]/10 rounded-full blur-[80px]" />
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
                                 <div className="p-6 rounded-2xl bg-gradient-to-b from-white/10 to-transparent border border-white/10 text-center space-y-2">
                                     <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">1er Puesto</p>
