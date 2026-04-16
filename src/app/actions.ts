@@ -651,7 +651,7 @@ export async function requestPasswordReset(identifier: string) {
 
     if (error) {
         console.error('Supabase Reset Password Error:', error)
-        return { error: 'Error al enviar el correo. Por favor, intenta de nuevo.' }
+        return { error: `Error de Supabase: ${error.message}` }
     }
 
     // Enmascarar el email para seguridad antes de enviarlo al cliente
