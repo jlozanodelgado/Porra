@@ -82,10 +82,14 @@ export default function LoginPage() {
                             placeholder="••••••••"
                         />
                         <div className="flex justify-end mt-1">
-                            <a href="/forgot-password" className="text-[10px] text-gray-500 hover:text-[var(--color-neon-cyan)] transition-colors uppercase tracking-widest font-black">
+                            <a 
+                                href={nickname ? `/forgot-password?nickname=${encodeURIComponent(nickname)}` : "/forgot-password"} 
+                                className="text-[10px] text-gray-400 hover:text-[var(--color-neon-cyan)] transition-colors uppercase tracking-widest font-black"
+                            >
                                 ¿Olvidaste tu contraseña?
                             </a>
                         </div>
+
                     </div>
                     {error && <p className="text-[var(--color-neon-red)] text-sm">{error}</p>}
                     <button

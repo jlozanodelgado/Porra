@@ -633,7 +633,10 @@ export async function requestPasswordReset(identifier: string) {
 
     // Obtener la URL base para el redireccionamiento de forma robusta
     const { headers: getHeaders } = await import('next/headers')
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (await getHeaders()).get('origin') || 'http://localhost:3000'
+    const headersList = await getHeaders()
+    const host = headersList.get('host')
+    const protocol = host?.includes('localhost') ? 'http' : 'https'
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
@@ -644,8 +647,9 @@ export async function requestPasswordReset(identifier: string) {
         return { error: 'Error al enviar el correo de recuperación. Inténtalo de nuevo.' }
     }
 
-    return { success: true }
+    return { success: true, email: email }
 }
+
 
 export async function updatePassword(formData: FormData) {
     const supabase = await createClient()

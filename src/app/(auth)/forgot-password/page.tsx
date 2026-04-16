@@ -2,13 +2,31 @@
 
 import React, { useState } from 'react';
 import { requestPasswordReset } from '@/app/actions';
-import { ArrowLeft, Mail, Send } from 'lucide-react';
+import { ArrowLeft, Mail, Send, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function ForgotPasswordPage() {
+    const searchParams = useSearchParams();
+    const nicknameParam = searchParams.get('nickname');
+    
     const [identifier, setIdentifier] = useState('');
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [message, setMessage] = useState<{ type: 'success' | 'alert' | 'error', text: string } | null>(null);
+
+    useEffect(() => {
+        if (nicknameParam) {
+            setIdentifier(nicknameParam);
+            setMessage({
+                type: 'alert',
+                text: `Ingresa tu apodo o correo para enviarte las instrucciones. Si usas tu apodo "${nicknameParam}", buscaremos tu correo registrado.`
+            });
+        }
+    }, [nicknameParam]);
+
+
+    const [successEmail, setSuccessEmail] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -20,14 +38,16 @@ export default function ForgotPasswordPage() {
         if (result?.error) {
             setMessage({ type: 'error', text: result.error });
         } else {
+            setSuccessEmail(result.email || '');
             setMessage({ 
                 type: 'success', 
-                text: 'Si el usuario existe, se ha enviado un correo con las instrucciones para restablecer tu contraseña.' 
+                text: `Se ha enviado un correo a ${result.email || 'tu cuenta'} con las instrucciones para restablecer tu contraseña.` 
             });
             setIdentifier('');
         }
         setLoading(false);
     };
+
 
     return (
         <main className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-6 relative overflow-hidden">
@@ -63,14 +83,26 @@ export default function ForgotPasswordPage() {
                     </div>
 
                     {message && (
-                        <div className={`p-4 rounded-lg text-sm font-medium ${
+                        <div className={`p-4 rounded-lg text-sm font-medium flex gap-3 ${
                             message.type === 'success' 
-                            ? 'bg-[var(--color-neon-green)]/10 text-[var(--color-neon-green)] border border-[var(--color-neon-green)]/20' 
+                            ? 'bg-[var(--color-neon-green)]/10 text-[var(--color-neon-green)] border border-[var(--color-neon-green)]/20 shadow-[0_0_15px_rgba(57,255,20,0.1)]' 
+                            : message.type === 'alert'
+                            ? 'bg-[var(--color-neon-cyan)]/10 text-[var(--color-neon-cyan)] border border-[var(--color-neon-cyan)]/20 shadow-[0_0_15px_rgba(0,255,255,0.05)]'
                             : 'bg-[var(--color-neon-red)]/10 text-[var(--color-neon-red)] border border-[var(--color-neon-red)]/20'
                         }`}>
-                            {message.text}
+                            {message.type === 'success' && <CheckCircle2 className="shrink-0" size={18} />}
+                            {message.type === 'alert' && <Mail className="shrink-0 opacity-50" size={18} />}
+                            <p>
+                                {message.type === 'success' ? (
+                                    <>
+                                        Se ha enviado un correo a <strong className="text-white underline decoration-[var(--color-neon-green)]/50">{successEmail}</strong> con las instrucciones para restablecer tu contraseña.
+                                    </>
+                                ) : message.text}
+                            </p>
                         </div>
                     )}
+
+
 
                     <button
                         type="submit"
