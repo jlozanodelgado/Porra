@@ -58,7 +58,7 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     // Rutas públicas y de estado
-    const publicRoutes = ['/login', '/register', '/auth'];
+    const publicRoutes = ['/login', '/register', '/auth', '/forgot-password', '/reset-password'];
     const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route));
     const isRoot = request.nextUrl.pathname === '/';
     const isPendingPage = request.nextUrl.pathname === '/pending-approval';

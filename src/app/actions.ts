@@ -617,15 +617,17 @@ export async function deleteMatch(matchId: number) {
 
 export async function requestPasswordReset(identifier: string) {
     const supabase = await createClient()
-    let email = identifier
+    const cleanIdentifier = identifier.trim()
+    let email = cleanIdentifier
 
     // Si no parece un correo, intentamos buscarlo por nickname
-    if (!identifier.includes('@')) {
+    if (!cleanIdentifier.includes('@')) {
         const { data: emailData, error: rpcError } = await supabase.rpc('get_email_by_nickname', {
-            p_nickname: identifier
+            p_nickname: cleanIdentifier
         })
 
         if (rpcError || !emailData) {
+            console.error('RPC Error searching email:', rpcError)
             return { error: 'No se encontró una cuenta con ese apodo o correo.' }
         }
         email = emailData as string
@@ -636,19 +638,25 @@ export async function requestPasswordReset(identifier: string) {
     const headersList = await getHeaders()
     const host = headersList.get('host')
     const protocol = host?.includes('localhost') ? 'http' : 'https'
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`
+    let siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`
+    
+    // Asegurar que no termine en / para evitar dobles barras
+    if (siteUrl.endsWith('/')) {
+        siteUrl = siteUrl.slice(0, -1)
+    }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
     })
 
     if (error) {
-        console.error('Error requesting password reset:', error)
-        return { error: 'Error al enviar el correo de recuperación. Inténtalo de nuevo.' }
+        console.error('Supabase Reset Password Error:', error)
+        return { error: 'Error al enviar el correo. Por favor, intenta de nuevo.' }
     }
 
     return { success: true, email: email }
 }
+
 
 
 export async function updatePassword(formData: FormData) {
