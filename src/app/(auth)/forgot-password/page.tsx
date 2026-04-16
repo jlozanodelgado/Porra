@@ -21,7 +21,7 @@ function ForgotPasswordContent() {
             setIdentifier(nicknameParam);
             setMessage({
                 type: 'alert',
-                text: `Ingresa tu apodo o correo para enviarte las instrucciones. Si usas tu apodo "${nicknameParam}", buscaremos tu correo registrado.`
+                text: `Se enviará un enlace de recuperación al correo asociado a tu cuenta "${nicknameParam}".`
             });
         }
     }, [nicknameParam]);
@@ -59,12 +59,12 @@ function ForgotPasswordContent() {
                         Volver al inicio de sesión
                     </Link>
                     <h1 className="text-3xl font-heading font-bold text-white mb-2">Recuperar Contraseña</h1>
-                    <p className="text-gray-400 font-body text-sm">Ingresa tu correo electrónico o tu apodo para recibir un enlace de recuperación.</p>
+                    <p className="text-gray-400 font-body text-sm">Ingresa tu apodo para recibir un enlace de recuperación en tu correo registrado.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5 font-body">
                     <div className="flex flex-col">
-                        <label className="text-xs uppercase tracking-widest font-black text-gray-500 mb-2">Apodo o Correo</label>
+                        <label className="text-xs uppercase tracking-widest font-black text-gray-500 mb-2">Apodo (Usuario)</label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                             <input
@@ -73,11 +73,12 @@ function ForgotPasswordContent() {
                                 value={identifier}
                                 onChange={(e) => setIdentifier(e.target.value)}
                                 className="w-full bg-black/50 border border-white/10 rounded-lg py-3 pl-10 pr-3 text-white focus:border-[var(--color-neon-cyan)] focus:outline-none focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-all"
-                                placeholder="usuario o email@ejemplo.com"
+                                placeholder="Tu apodo"
                                 disabled={loading}
                             />
                         </div>
                     </div>
+
 
                     {message && (
                         <div className={`p-4 rounded-lg text-sm font-medium flex gap-3 ${message.type === 'success'
