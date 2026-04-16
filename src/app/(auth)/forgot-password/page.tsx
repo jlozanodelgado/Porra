@@ -1,19 +1,20 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { requestPasswordReset } from '@/app/actions';
 import { ArrowLeft, Mail, Send, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
 
-export default function ForgotPasswordPage() {
+// 1. Extraemos todo el contenido a este componente
+function ForgotPasswordContent() {
     const searchParams = useSearchParams();
     const nicknameParam = searchParams.get('nickname');
-    
+
     const [identifier, setIdentifier] = useState('');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'alert' | 'error', text: string } | null>(null);
+    const [successEmail, setSuccessEmail] = useState('');
 
     useEffect(() => {
         if (nicknameParam) {
@@ -24,9 +25,6 @@ export default function ForgotPasswordPage() {
             });
         }
     }, [nicknameParam]);
-
-
-    const [successEmail, setSuccessEmail] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,15 +37,14 @@ export default function ForgotPasswordPage() {
             setMessage({ type: 'error', text: result.error });
         } else {
             setSuccessEmail(result.email || '');
-            setMessage({ 
-                type: 'success', 
-                text: `Se ha enviado un correo a ${result.email || 'tu cuenta'} con las instrucciones para restablecer tu contraseña.` 
+            setMessage({
+                type: 'success',
+                text: `Se ha enviado un correo a ${result.email || 'tu cuenta'} con las instrucciones para restablecer tu contraseña.`
             });
             setIdentifier('');
         }
         setLoading(false);
     };
-
 
     return (
         <main className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-6 relative overflow-hidden">
@@ -83,13 +80,12 @@ export default function ForgotPasswordPage() {
                     </div>
 
                     {message && (
-                        <div className={`p-4 rounded-lg text-sm font-medium flex gap-3 ${
-                            message.type === 'success' 
-                            ? 'bg-[var(--color-neon-green)]/10 text-[var(--color-neon-green)] border border-[var(--color-neon-green)]/20 shadow-[0_0_15px_rgba(57,255,20,0.1)]' 
-                            : message.type === 'alert'
-                            ? 'bg-[var(--color-neon-cyan)]/10 text-[var(--color-neon-cyan)] border border-[var(--color-neon-cyan)]/20 shadow-[0_0_15px_rgba(0,255,255,0.05)]'
-                            : 'bg-[var(--color-neon-red)]/10 text-[var(--color-neon-red)] border border-[var(--color-neon-red)]/20'
-                        }`}>
+                        <div className={`p-4 rounded-lg text-sm font-medium flex gap-3 ${message.type === 'success'
+                                ? 'bg-[var(--color-neon-green)]/10 text-[var(--color-neon-green)] border border-[var(--color-neon-green)]/20 shadow-[0_0_15px_rgba(57,255,20,0.1)]'
+                                : message.type === 'alert'
+                                    ? 'bg-[var(--color-neon-cyan)]/10 text-[var(--color-neon-cyan)] border border-[var(--color-neon-cyan)]/20 shadow-[0_0_15px_rgba(0,255,255,0.05)]'
+                                    : 'bg-[var(--color-neon-red)]/10 text-[var(--color-neon-red)] border border-[var(--color-neon-red)]/20'
+                            }`}>
                             {message.type === 'success' && <CheckCircle2 className="shrink-0" size={18} />}
                             {message.type === 'alert' && <Mail className="shrink-0 opacity-50" size={18} />}
                             <p>
@@ -101,8 +97,6 @@ export default function ForgotPasswordPage() {
                             </p>
                         </div>
                     )}
-
-
 
                     <button
                         type="submit"
@@ -119,5 +113,20 @@ export default function ForgotPasswordPage() {
                 </form>
             </div>
         </main>
+    );
+}
+
+// 2. Exportamos la página principal envolviendo el contenido en Suspense
+export default function ForgotPasswordPage() {
+    return (
+        <Suspense
+            fallback={
+                <main className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-6">
+                    <div className="text-[var(--color-neon-cyan)] font-body animate-pulse">Cargando...</div>
+                </main>
+            }
+        >
+            <ForgotPasswordContent />
+        </Suspense>
     );
 }
