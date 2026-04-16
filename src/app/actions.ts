@@ -654,8 +654,23 @@ export async function requestPasswordReset(identifier: string) {
         return { error: 'Error al enviar el correo. Por favor, intenta de nuevo.' }
     }
 
-    return { success: true, email: email }
+    // Enmascarar el email para seguridad antes de enviarlo al cliente
+    const maskedEmail = (emailStr: string) => {
+        const [local, domain] = emailStr.split('@');
+        if (!local || !domain) return emailStr;
+        const maskSide = (str: string) => {
+            if (str.length <= 2) return str[0] + '*';
+            return str[0] + '*'.repeat(Math.min(str.length - 2, 5)) + str[str.length - 1];
+        };
+        const domainParts = domain.split('.');
+        const domainName = domainParts[0];
+        const tld = domainParts.slice(1).join('.');
+        return `${maskSide(local)}@${maskSide(domainName)}.${tld}`;
+    };
+
+    return { success: true, email: maskedEmail(email) }
 }
+
 
 
 
