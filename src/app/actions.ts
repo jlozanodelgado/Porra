@@ -208,409 +208,477 @@ export async function toggleUserPaid(userId: string, isPaid: boolean) {
 // ──── ADMIN: CREAR / EDITAR PARTIDOS ────
 
 export async function upsertMatch(formData: FormData) {
-    const supabase = await createClient()
+    try {
+        const supabase = await createClient()
 
-    // Verificar admin
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'No autenticado.' }
+        // Verificar admin
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'No autenticado.' }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single()
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
 
-    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+        if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
 
-    const matchId = formData.get('matchId') as string | null
-    const homeTeamId = parseInt(formData.get('homeTeamId') as string)
-    const awayTeamId = parseInt(formData.get('awayTeamId') as string)
-    const kickoffTime = formData.get('kickoffTime') as string
-    const isPlayoff = formData.get('isPlayoff') === 'true'
+        const matchId = formData.get('matchId') as string | null
+        const homeTeamId = parseInt(formData.get('homeTeamId') as string)
+        const awayTeamId = parseInt(formData.get('awayTeamId') as string)
+        const kickoffTime = formData.get('kickoffTime') as string
+        const isPlayoff = formData.get('isPlayoff') === 'true'
 
-    if (!homeTeamId || !awayTeamId || !kickoffTime) {
-        return { error: 'Faltan datos del partido.' }
-    }
-
-    if (matchId) {
-        // Editar partido existente
-        const { error } = await supabase.from('matches').update({
-            home_team_id: homeTeamId,
-            away_team_id: awayTeamId,
-            kickoff_time: kickoffTime,
-            is_playoff: isPlayoff,
-        }).eq('id', parseInt(matchId))
-
-        if (error) {
-            console.error('Error updating match:', error)
-            return { error: 'Error al actualizar el partido.' }
+        if (!homeTeamId || !awayTeamId || !kickoffTime) {
+            return { error: 'Faltan datos del partido.' }
         }
-    } else {
-        // Crear partido nuevo
-        const { error } = await supabase.from('matches').insert({
-            home_team_id: homeTeamId,
-            away_team_id: awayTeamId,
-            kickoff_time: kickoffTime,
-            is_playoff: isPlayoff,
-        })
 
-        if (error) {
-            console.error('Error creating match:', error)
-            return { error: 'Error al crear el partido.' }
+        if (matchId) {
+            // Editar partido existente
+            const { error } = await supabase.from('matches').update({
+                home_team_id: homeTeamId,
+                away_team_id: awayTeamId,
+                kickoff_time: kickoffTime,
+                is_playoff: isPlayoff,
+            }).eq('id', parseInt(matchId))
+
+            if (error) {
+                console.error('Error updating match:', error)
+                return { error: 'Error al actualizar el partido.' }
+            }
+        } else {
+            // Crear partido nuevo
+            const { error } = await supabase.from('matches').insert({
+                home_team_id: homeTeamId,
+                away_team_id: awayTeamId,
+                kickoff_time: kickoffTime,
+                is_playoff: isPlayoff,
+            })
+
+            if (error) {
+                console.error('Error creating match:', error)
+                return { error: 'Error al crear el partido.' }
+            }
         }
-    }
 
-    return { success: true }
+        return { success: true }
+    } catch (err: any) {
+        console.error('CRITICAL - Unhandled error in upsertMatch:', err)
+        return { error: `Error inesperado: ${err.message || 'Error del servidor'}` }
+    }
 }
 
 // ──── ADMIN: CARGAR RESULTADO FINAL Y CALCULAR PUNTOS ────
 
 export async function updateMatchResult(formData: FormData) {
-    const supabase = await createClient()
+    try {
+        const supabase = await createClient()
 
-    // Verificar admin
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'No autenticado.' }
+        // Verificar admin
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'No autenticado.' }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single()
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
 
-    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+        if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
 
-    const matchId = parseInt(formData.get('matchId') as string)
-    const homeGoalsReal = parseInt(formData.get('homeGoalsReal') as string)
-    const awayGoalsReal = parseInt(formData.get('awayGoalsReal') as string)
+        const matchId = parseInt(formData.get('matchId') as string)
+        const homeGoalsReal = parseInt(formData.get('homeGoalsReal') as string)
+        const awayGoalsReal = parseInt(formData.get('awayGoalsReal') as string)
 
-    if (isNaN(matchId) || isNaN(homeGoalsReal) || isNaN(awayGoalsReal)) {
-        return { error: 'Datos inválidos.' }
-    }
-
-    // 1. Obtener datos del partido para saber si es playoff
-    const { data: match, error: matchError } = await supabase
-        .from('matches')
-        .select('is_playoff')
-        .eq('id', matchId)
-        .single()
-
-    if (matchError || !match) return { error: 'Partido no encontrado.' }
-
-    // 2. Actualizar resultado del partido
-    const { error: updateError } = await supabase.from('matches').update({
-        home_goals_real: homeGoalsReal,
-        away_goals_real: awayGoalsReal,
-        status: 'finished',
-    }).eq('id', matchId)
-
-    if (updateError) {
-        console.error('Error updating match result:', updateError)
-        return { error: 'Error al guardar el resultado.' }
-    }
-
-    // 3. Obtener todas las predicciones de este partido
-    const { data: predictions, error: predError } = await supabase
-        .from('predictions')
-        .select('id, home_goals_pred, away_goals_pred')
-        .eq('match_id', matchId)
-
-    if (predError) {
-        console.error('Error fetching predictions:', predError)
-        return { error: 'Resultado guardado, pero error al calcular puntos.' }
-    }
-
-    // 4. Calcular puntos para cada predicción y actualizar
-    if (predictions && predictions.length > 0) {
-        for (const pred of predictions) {
-            const points = calculatePoints(
-                pred.home_goals_pred,
-                pred.away_goals_pred,
-                homeGoalsReal,
-                awayGoalsReal,
-                match.is_playoff ?? false
-            )
-
-            await supabase.from('predictions').update({
-                points_earned: points
-            }).eq('id', pred.id)
+        if (isNaN(matchId) || isNaN(homeGoalsReal) || isNaN(awayGoalsReal)) {
+            return { error: 'Datos inválidos.' }
         }
 
-        // 5. Recalcular total_points de todos los usuarios que tenían predicción
-        const userIds = [...new Set(
-            (await supabase.from('predictions').select('user_id').eq('match_id', matchId))
-                .data?.map(p => p.user_id) ?? []
-        )]
+        // 1. Obtener datos del partido para saber si es playoff
+        const { data: match, error: matchError } = await supabase
+            .from('matches')
+            .select('is_playoff')
+            .eq('id', matchId)
+            .single()
 
-        for (const uid of userIds) {
-            const { data: userPreds } = await supabase
-                .from('predictions')
-                .select('points_earned')
-                .eq('user_id', uid)
+        if (matchError || !match) return { error: 'Partido no encontrado.' }
 
-            const total = userPreds?.reduce((sum, p) => sum + (p.points_earned || 0), 0) ?? 0
+        // 2. Actualizar resultado del partido
+        const { error: updateError } = await supabase.from('matches').update({
+            home_goals_real: homeGoalsReal,
+            away_goals_real: awayGoalsReal,
+            status: 'finished',
+        }).eq('id', matchId)
 
-            await supabase.from('profiles').update({
-                total_points: total
-            }).eq('id', uid)
+        if (updateError) {
+            console.error('Error updating match result:', updateError)
+            return { error: 'Error al guardar el resultado.' }
         }
-    }
 
-    redirect('/admin')
+        // 3. Obtener todas las predicciones de este partido
+        const { data: predictions, error: predError } = await supabase
+            .from('predictions')
+            .select('id, home_goals_pred, away_goals_pred')
+            .eq('match_id', matchId)
+
+        if (predError) {
+            console.error('Error fetching predictions:', predError)
+            return { error: 'Resultado guardado, pero error al calcular puntos.' }
+        }
+
+        // 4. Calcular puntos para cada predicción y actualizar
+        if (predictions && predictions.length > 0) {
+            for (const pred of predictions) {
+                const points = calculatePoints(
+                    pred.home_goals_pred,
+                    pred.away_goals_pred,
+                    homeGoalsReal,
+                    awayGoalsReal,
+                    match.is_playoff ?? false
+                )
+
+                await supabase.from('predictions').update({
+                    points_earned: points
+                }).eq('id', pred.id)
+            }
+
+            // 5. Recalcular total_points de todos los usuarios que tenían predicción
+            const userIds = [...new Set(
+                (await supabase.from('predictions').select('user_id').eq('match_id', matchId))
+                    .data?.map(p => p.user_id) ?? []
+            )]
+
+            for (const uid of userIds) {
+                const { data: userPreds } = await supabase
+                    .from('predictions')
+                    .select('points_earned')
+                    .eq('user_id', uid)
+
+                const total = userPreds?.reduce((sum, p) => sum + (p.points_earned || 0), 0) ?? 0
+
+                await supabase.from('profiles').update({
+                    total_points: total
+                }).eq('id', uid)
+            }
+        }
+
+        revalidatePath('/admin')
+        revalidatePath('/dashboard')
+        redirect('/admin')
+    } catch (err: any) {
+        if (err.digest?.includes('NEXT_REDIRECT')) throw err; // Permitir que redirect funcione
+        console.error('CRITICAL - Unhandled error in updateMatchResult:', err)
+        return { error: `Error inesperado: ${err.message || 'Error del servidor'}` }
+    }
 }
 
 // ──── ADMIN: ELIMINAR USUARIO ────
 
 export async function deleteUser(userId: string) {
-    // 1. Verificar que el usuario que llama ES ADMIN (con cliente normal)
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'No autenticado.' }
+    try {
+        // 1. Verificar que el usuario que llama ES ADMIN (con cliente normal)
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'No autenticado.' }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single()
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
 
-    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+        if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
 
-    // 2. Usar cliente administrativo para saltar RLS y borrar todo
-    const adminSupabase = await createAdminClient()
+        // 2. Usar cliente administrativo para saltar RLS y borrar todo
+        // Intentamos crear el cliente admin. Si fallan las env vars, lanzará error.
+        let adminSupabase;
+        try {
+            adminSupabase = await createAdminClient()
+        } catch (adminError: any) {
+            console.error('Error creating admin client:', adminError)
+            return { error: 'Error de configuración del servidor (Service Role Key). Verifica las variables de entorno.' }
+        }
 
-    // A. Eliminar pronósticos
-    const { error: predError } = await adminSupabase.from('predictions').delete().eq('user_id', userId)
-    if (predError) {
-        console.error('DEBUG - Error deleting user predictions:', predError)
-        return { error: `Error DB (Pronósticos): ${predError.message}` }
+        // A. Eliminar pronósticos
+        const { error: predError } = await adminSupabase.from('predictions').delete().eq('user_id', userId)
+        if (predError) {
+            console.error('DEBUG - Error deleting user predictions:', predError)
+            return { error: `Error DB (Pronósticos): ${predError.message}` }
+        }
+
+        // B. Eliminar el perfil
+        const { error: profileError } = await adminSupabase.from('profiles').delete().eq('id', userId)
+        if (profileError) {
+            console.error('DEBUG - Error deleting user profile:', profileError)
+            return { error: `Error DB (Perfil): ${profileError.message}` }
+        }
+
+        // C. Eliminar de Supabase Auth (Raíz)
+        const { error: authError } = await adminSupabase.auth.admin.deleteUser(userId)
+        if (authError) {
+            console.error('DEBUG - Error deleting auth user:', authError)
+            // No bloqueamos el éxito si el perfil ya se borró, pero avisamos.
+            // A veces el usuario no existe en auth pero sí en profiles por errores previos.
+        }
+
+        revalidatePath('/admin')
+        revalidatePath('/admin/users')
+        return { success: true }
+    } catch (err: any) {
+        console.error('CRITICAL - Unhandled error in deleteUser:', err)
+        return { error: `Error inesperado: ${err.message || 'Error del servidor'}` }
     }
-
-    // B. Eliminar el perfil
-    const { error: profileError } = await adminSupabase.from('profiles').delete().eq('id', userId)
-    if (profileError) {
-        console.error('DEBUG - Error deleting user profile:', profileError)
-        return { error: `Error DB (Perfil): ${profileError.message}` }
-    }
-
-    // C. Eliminar de Supabase Auth (Raíz)
-    const { error: authError } = await adminSupabase.auth.admin.deleteUser(userId)
-    if (authError) {
-        console.error('DEBUG - Error deleting auth user:', authError)
-        // No bloqueamos el éxito si el perfil ya se borró, pero avisamos.
-    }
-
-    revalidatePath('/admin')
-    return { success: true }
 }
 
 // ──── ADMIN: GESTIÓN DE EQUIPOS ────
 
 export async function createTeam(formData: FormData) {
-    // Verificar admin con cliente normal
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'No autenticado.' }
+    try {
+        // Verificar admin con cliente normal
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'No autenticado.' }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single()
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
 
-    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+        if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
 
-    // Usar cliente administrativo para la operación
-    const adminSupabase = await createAdminClient()
+        // Usar cliente administrativo para la operación
+        let adminSupabase;
+        try {
+            adminSupabase = await createAdminClient()
+        } catch (adminError) {
+            return { error: 'Error de configuración del servidor (Admin Client). Verifica las variables de entorno.' }
+        }
 
-    const name = formData.get('name') as string
-    const flagUrl = formData.get('flagUrl') as string
-    const groupName = formData.get('groupName') as string
+        const name = formData.get('name') as string
+        const flagUrl = formData.get('flagUrl') as string
+        const groupName = formData.get('groupName') as string
 
-    if (!name || !groupName) {
-        return { error: 'Nombre y Grupo son obligatorios.' }
+        if (!name || !groupName) {
+            return { error: 'Nombre y Grupo son obligatorios.' }
+        }
+
+        const { error } = await adminSupabase.from('teams').insert({
+            name,
+            flag_url: flagUrl,
+            group_name: groupName.toUpperCase()
+        })
+
+        if (error) {
+            console.error('Error creating team:', error)
+            return { error: 'Error al crear el equipo.' }
+        }
+
+        revalidatePath('/admin/teams')
+        return { success: true }
+    } catch (err: any) {
+        console.error('CRITICAL - Unhandled error in createTeam:', err)
+        return { error: `Error inesperado: ${err.message || 'Error del servidor'}` }
     }
-
-    const { error } = await adminSupabase.from('teams').insert({
-        name,
-        flag_url: flagUrl,
-        group_name: groupName.toUpperCase()
-    })
-
-    if (error) {
-        console.error('Error creating team:', error)
-        return { error: 'Error al crear el equipo.' }
-    }
-
-    revalidatePath('/admin/teams')
-    return { success: true }
 }
 
 export async function updateTeam(formData: FormData) {
-    // Verificar admin con cliente normal
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'No autenticado.' }
+    try {
+        // Verificar admin con cliente normal
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'No autenticado.' }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single()
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
 
-    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+        if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
 
-    // Usar cliente administrativo para la operación
-    const adminSupabase = await createAdminClient()
+        // Usar cliente administrativo para la operación
+        let adminSupabase;
+        try {
+            adminSupabase = await createAdminClient()
+        } catch (adminError) {
+            return { error: 'Error de configuración del servidor (Admin Client). Verifica las variables de entorno.' }
+        }
 
-    const teamId = formData.get('teamId') as string
-    const name = formData.get('name') as string
-    const flagUrl = formData.get('flagUrl') as string
-    const groupName = formData.get('groupName') as string
+        const teamId = formData.get('teamId') as string
+        const name = formData.get('name') as string
+        const flagUrl = formData.get('flagUrl') as string
+        const groupName = formData.get('groupName') as string
 
-    if (!teamId || !name || !groupName) {
-        return { error: 'ID, Nombre y Grupo son obligatorios.' }
+        if (!teamId || !name || !groupName) {
+            return { error: 'ID, Nombre y Grupo son obligatorios.' }
+        }
+
+        const { error } = await adminSupabase.from('teams').update({
+            name,
+            flag_url: flagUrl,
+            group_name: groupName.toUpperCase()
+        }).eq('id', parseInt(teamId))
+
+        if (error) {
+            console.error('Error updating team:', error)
+            return { error: 'Error al actualizar el equipo.' }
+        }
+
+        revalidatePath('/admin/teams')
+        return { success: true }
+    } catch (err: any) {
+        console.error('CRITICAL - Unhandled error in updateTeam:', err)
+        return { error: `Error inesperado: ${err.message || 'Error del servidor'}` }
     }
-
-    const { error } = await adminSupabase.from('teams').update({
-        name,
-        flag_url: flagUrl,
-        group_name: groupName.toUpperCase()
-    }).eq('id', parseInt(teamId))
-
-    if (error) {
-        console.error('Error updating team:', error)
-        return { error: 'Error al actualizar el equipo.' }
-    }
-
-    revalidatePath('/admin/teams')
-    return { success: true }
 }
 
 export async function deleteTeam(teamId: number) {
-    const supabase = await createClient()
+    try {
+        const supabase = await createClient()
 
-    // Verificar admin
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'No autenticado.' }
+        // Verificar admin
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'No autenticado.' }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single()
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
 
-    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+        if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
 
-    // Usar cliente administrativo para saltar RLS
-    const adminSupabase = await createAdminClient()
-
-    // Intentar eliminar el equipo
-    // NOTA: Si el equipo tiene partidos asociados, esto fallará por FK constraints (comportamiento deseado)
-    const { error } = await adminSupabase.from('teams').delete().eq('id', teamId)
-
-    if (error) {
-        console.error('Error deleting team:', error)
-        if (error.code === '23503') {
-            return { error: 'No se puede eliminar el equipo porque tiene partidos asociados. Elimina primero los partidos.' }
+        // Usar cliente administrativo para saltar RLS
+        let adminSupabase;
+        try {
+            adminSupabase = await createAdminClient()
+        } catch (adminError) {
+            return { error: 'Error de configuración del servidor (Admin Client). Verifica las variables de entorno.' }
         }
-        return { error: 'Error al eliminar el equipo.' }
-    }
 
-    revalidatePath('/admin/teams')
-    return { success: true }
+        // Intentar eliminar el equipo
+        // NOTA: Si el equipo tiene partidos asociados, esto fallará por FK constraints (comportamiento deseado)
+        const { error } = await adminSupabase.from('teams').delete().eq('id', teamId)
+
+        if (error) {
+            console.error('Error deleting team:', error)
+            if (error.code === '23503') {
+                return { error: 'No se puede eliminar el equipo porque tiene partidos asociados. Elimina primero los partidos.' }
+            }
+            return { error: 'Error al eliminar el equipo.' }
+        }
+
+        revalidatePath('/admin/teams')
+        return { success: true }
+    } catch (err: any) {
+        console.error('CRITICAL - Unhandled error in deleteTeam:', err)
+        return { error: `Error inesperado: ${err.message || 'Error del servidor'}` }
+    }
 }
 
 export async function bulkUpsertMatches(matchesData: any[]) {
-    const supabase = await createClient()
+    try {
+        const supabase = await createClient()
 
-    // Verificar admin
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'No autenticado.' }
+        // Verificar admin
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'No autenticado.' }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single()
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
 
-    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+        if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
 
-    // Preparar datos (convertir ids a número y asegurar UTC)
-    const formattedMatches = matchesData.map(m => ({
-        home_team_id: parseInt(m.homeTeamId),
-        away_team_id: parseInt(m.awayTeamId),
-        kickoff_time: m.kickoffTime,
-        is_playoff: m.isPlayoff === true || m.isPlayoff === 'true',
-        status: 'pending'
-    }));
+        // Preparar datos (convertir ids a número y asegurar UTC)
+        const formattedMatches = matchesData.map(m => ({
+            home_team_id: parseInt(m.homeTeamId),
+            away_team_id: parseInt(m.awayTeamId),
+            kickoff_time: m.kickoffTime,
+            is_playoff: m.isPlayoff === true || m.isPlayoff === 'true',
+            status: 'pending'
+        }));
 
-    // Insertar masivamente
-    const { error } = await supabase.from('matches').insert(formattedMatches)
+        // Insertar masivamente
+        const { error } = await supabase.from('matches').insert(formattedMatches)
 
-    if (error) {
-        console.error('Error bulk creating matches:', error)
-        return { error: 'Error al realizar la carga masiva de partidos.' }
+        if (error) {
+            console.error('Error bulk creating matches:', error)
+            return { error: 'Error al realizar la carga masiva de partidos.' }
+        }
+
+        revalidatePath('/admin/matches')
+        revalidatePath('/dashboard')
+        return { success: true }
+    } catch (err: any) {
+        console.error('CRITICAL - Unhandled error in bulkUpsertMatches:', err)
+        return { error: `Error inesperado: ${err.message || 'Error del servidor'}` }
     }
-
-    revalidatePath('/admin/matches')
-    revalidatePath('/dashboard')
-    return { success: true }
 }
 
 export async function deleteMatch(matchId: number) {
-    const supabase = await createClient()
+    try {
+        const supabase = await createClient()
 
-    // Verificar admin
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'No autenticado.' }
+        // Verificar admin
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'No autenticado.' }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single()
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
 
-    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+        if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
 
-    // 1. Obtener los IDs de los usuarios que tienen predicciones en este partido
-    const { data: predictions } = await supabase
-        .from('predictions')
-        .select('user_id')
-        .eq('match_id', matchId)
-    
-    const affectedUserIds = [...new Set(predictions?.map(p => p.user_id) || [])]
-
-    // 2. Eliminar predicciones asociadas primero (ya que no hay ON DELETE CASCADE en la BD)
-    const { error: predDeleteError } = await supabase.from('predictions').delete().eq('match_id', matchId)
-    
-    if (predDeleteError) {
-        console.error('Error deleting predictions:', predDeleteError)
-        return { error: 'Error al eliminar los pronósticos asociados.' }
-    }
-
-    // 3. Eliminar el partido
-    const { error: deleteError } = await supabase.from('matches').delete().eq('id', matchId)
-
-    if (deleteError) {
-        console.error('Error deleting match:', deleteError)
-        return { error: 'Error al eliminar el partido.' }
-    }
-
-    // 4. Recalcular total_points para cada usuario afectado
-    for (const userId of affectedUserIds) {
-        const { data: userPreds } = await supabase
+        // 1. Obtener los IDs de los usuarios que tienen predicciones en este partido
+        const { data: predictions } = await supabase
             .from('predictions')
-            .select('points_earned')
-            .eq('user_id', userId)
+            .select('user_id')
+            .eq('match_id', matchId)
+        
+        const affectedUserIds = [...new Set(predictions?.map(p => p.user_id) || [])]
 
-        const newTotal = userPreds?.reduce((sum, p) => sum + (p.points_earned || 0), 0) ?? 0
+        // 2. Eliminar predicciones asociadas primero (ya que no hay ON DELETE CASCADE en la BD)
+        const { error: predDeleteError } = await supabase.from('predictions').delete().eq('match_id', matchId)
+        
+        if (predDeleteError) {
+            console.error('Error deleting predictions:', predDeleteError)
+            return { error: 'Error al eliminar los pronósticos asociados.' }
+        }
 
-        await supabase.from('profiles').update({
-            total_points: newTotal
-        }).eq('id', userId)
+        // 3. Eliminar el partido
+        const { error: deleteError } = await supabase.from('matches').delete().eq('id', matchId)
+
+        if (deleteError) {
+            console.error('Error deleting match:', deleteError)
+            return { error: 'Error al eliminar el partido.' }
+        }
+
+        // 4. Recalcular total_points para cada usuario afectado
+        for (const userId of affectedUserIds) {
+            const { data: userPreds } = await supabase
+                .from('predictions')
+                .select('points_earned')
+                .eq('user_id', userId)
+
+            const newTotal = userPreds?.reduce((sum, p) => sum + (p.points_earned || 0), 0) ?? 0
+
+            await supabase.from('profiles').update({
+                total_points: newTotal
+            }).eq('id', userId)
+        }
+
+        revalidatePath('/admin/matches')
+        return { success: true }
+    } catch (err: any) {
+        console.error('CRITICAL - Unhandled error in deleteMatch:', err)
+        return { error: `Error inesperado: ${err.message || 'Error del servidor'}` }
     }
-
-    return { success: true }
 }
 
 // ──── AUTENTICACIÓN: RECUPERACIÓN DE CONTRASEÑA ────
