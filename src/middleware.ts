@@ -59,9 +59,19 @@ export async function middleware(request: NextRequest) {
 
     // Rutas públicas y de estado
     const publicRoutes = ['/login', '/register', '/auth', '/forgot-password', '/reset-password'];
-    const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route));
-    const isRoot = request.nextUrl.pathname === '/';
-    const isPendingPage = request.nextUrl.pathname === '/pending-approval';
+    const path = request.nextUrl.pathname;
+    const isPublicRootRoute = publicRoutes.some(route => path.startsWith(route));
+
+    // Check for porra public routes: /porra/[slug], /porra/[slug]/login, /porra/[slug]/register
+    const segments = path.split('/').filter(Boolean);
+    const isPublicPorraRoute = path.startsWith('/porra/') && (
+        segments.length === 2 || // /porra/[slug]
+        (segments.length === 3 && (segments[2] === 'login' || segments[2] === 'register'))
+    );
+
+    const isPublicRoute = isPublicRootRoute || isPublicPorraRoute;
+    const isRoot = path === '/';
+    const isPendingPage = path === '/pending-approval';
 
     // 1. Si no hay sesión y no es ruta pública, al login
     if (!user && !isPublicRoute && !isRoot && !isPendingPage) {
@@ -89,7 +99,13 @@ export async function middleware(request: NextRequest) {
         }
 
         // Si ya está logueado y aprobado, no dejar entrar a login/register
-        if (isApproved && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register')) {
+        const isLoginOrRegister = path === '/login' || path === '/register' || (isPublicPorraRoute && (path.endsWith('/login') || path.endsWith('/register')));
+        if (isApproved && isLoginOrRegister) {
+            // Si es una ruta de porra, redirigir al dashboard de esa porra
+            if (isPublicPorraRoute && segments.length >= 2) {
+                const slug = segments[1];
+                return NextResponse.redirect(new URL(`/porra/${slug}/dashboard`, request.url))
+            }
             return NextResponse.redirect(new URL('/dashboard', request.url))
         }
     }
