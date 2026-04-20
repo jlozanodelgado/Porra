@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import Sidebar from '@/components/layout/Sidebar';
 import { redirect } from 'next/navigation';
 import AvatarUpload from '@/components/profile/AvatarUpload';
-import { User, Mail, Calendar, Award, CreditCard, ArrowLeft } from 'lucide-react';
+import { User, Mail, Calendar, Award, CreditCard, ArrowLeft, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import ChangePasswordForm from '@/components/profile/ChangePasswordForm';
 
@@ -27,10 +27,10 @@ export default async function ProfilePage() {
 
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
-            <Sidebar 
-                isAdmin={isAdmin} 
-                displayName={displayName} 
-                avatarUrl={avatarUrl} 
+            <Sidebar
+                isAdmin={isAdmin}
+                displayName={displayName}
+                avatarUrl={avatarUrl}
                 nickname={nickname}
                 porraName={porraName}
             />
@@ -55,10 +55,10 @@ export default async function ProfilePage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {/* Tarjeta de Avatar */}
                         <div className="bg-[var(--color-surface)]/40 p-8 rounded-3xl border border-white/5 backdrop-blur-sm shadow-2xl flex flex-col items-center justify-center">
-                            <AvatarUpload 
-                                userId={user.id} 
-                                currentAvatarUrl={avatarUrl} 
-                                nickname={nickname} 
+                            <AvatarUpload
+                                userId={user.id}
+                                currentAvatarUrl={avatarUrl}
+                                nickname={nickname}
                             />
                             <div className="mt-6 text-center">
                                 <h2 className="text-2xl font-bold text-white mb-1">{displayName}</h2>
