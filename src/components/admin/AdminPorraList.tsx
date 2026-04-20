@@ -5,6 +5,12 @@ import { createClient } from '@/lib/supabase/client';
 import { updatePorra, deletePorra } from '@/app/actions';
 import { Pencil, Trash2, Palette } from 'lucide-react';
 
+interface Prize {
+    label: string;
+    value: string;
+    description: string;
+}
+
 interface Porra {
     id: string;
     name: string;
@@ -13,6 +19,7 @@ interface Porra {
     primary_color: string | null;
     secondary_color: string | null;
     created_at: string | null;
+    prize_config?: Prize[] | null;
 }
 
 interface AdminPorraListProps {
@@ -21,8 +28,28 @@ interface AdminPorraListProps {
 
 export default function AdminPorraList({ porras }: AdminPorraListProps) {
     const [editingPorra, setEditingPorra] = useState<Porra | null>(null);
+    const [prizes, setPrizes] = useState<Prize[]>([]);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    const handleOpenEdit = (porra: Porra) => {
+        setEditingPorra(porra);
+        setPrizes(porra.prize_config || []);
+    };
+
+    const addPrize = () => {
+        setPrizes([...prizes, { label: '', value: '', description: '' }]);
+    };
+
+    const removePrize = (index: number) => {
+        setPrizes(prizes.filter((_, i) => i !== index));
+    };
+
+    const updatePrize = (index: number, field: keyof Prize, value: string) => {
+        const newPrizes = [...prizes];
+        newPrizes[index][field] = value;
+        setPrizes(newPrizes);
+    };
 
     const handleEdit = async (formData: FormData) => {
         const result = await updatePorra(formData);
@@ -115,7 +142,7 @@ export default function AdminPorraList({ porras }: AdminPorraListProps) {
 
                         <div className="flex gap-2">
                             <button
-                                onClick={() => setEditingPorra(porra)}
+                                onClick={() => handleOpenEdit(porra)}
                                 className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[var(--color-neon-cyan)]/20 text-[var(--color-neon-cyan)] hover:bg-[var(--color-neon-cyan)]/30 transition-colors text-sm font-medium"
                             >
                                 <Pencil size={14} />
@@ -142,73 +169,128 @@ export default function AdminPorraList({ porras }: AdminPorraListProps) {
                     <div className="bg-[var(--color-surface)] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
                         <h2 className="text-xl font-heading font-bold text-white mb-6">Editar Porra</h2>
 
-                        <form onSubmit={(e) => { e.preventDefault(); handleEdit(new FormData(e.currentTarget)); }} className="space-y-4">
+                        <form onSubmit={(e) => { e.preventDefault(); handleEdit(new FormData(e.currentTarget)); }} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
                             <input type="hidden" name="porraId" value={editingPorra.id} />
+                            <input type="hidden" name="prizeConfig" value={JSON.stringify(prizes)} />
 
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">Nombre</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    defaultValue={editingPorra.name}
-                                    required
-                                    className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--color-neon-cyan)] focus:outline-none"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">Slug (URL)</label>
-                                <input
-                                    type="text"
-                                    name="slug"
-                                    defaultValue={editingPorra.slug}
-                                    required
-                                    className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white font-mono focus:border-[var(--color-neon-cyan)] focus:outline-none"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-1">URL del Logo</label>
-                                <input
-                                    type="url"
-                                    name="logoUrl"
-                                    defaultValue={editingPorra.logo_url || ''}
-                                    className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--color-neon-cyan)] focus:outline-none"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-4 pb-4 border-b border-white/10">
+                                <h3 className="text-sm font-heading font-black text-[var(--color-neon-cyan)] uppercase tracking-widest">Información Básica</h3>
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Color Primario</label>
+                                    <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wider">Nombre</label>
                                     <input
-                                        type="color"
-                                        name="primaryColor"
-                                        defaultValue={editingPorra.primary_color || '#00ff00'}
-                                        className="w-full h-10 rounded-lg cursor-pointer"
+                                        type="text"
+                                        name="name"
+                                        defaultValue={editingPorra.name}
+                                        required
+                                        className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--color-neon-cyan)] focus:outline-none"
                                     />
                                 </div>
+
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Color Secundario</label>
+                                    <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wider">Slug (URL)</label>
                                     <input
-                                        type="color"
-                                        name="secondaryColor"
-                                        defaultValue={editingPorra.secondary_color || '#00ffff'}
-                                        className="w-full h-10 rounded-lg cursor-pointer"
+                                        type="text"
+                                        name="slug"
+                                        defaultValue={editingPorra.slug}
+                                        required
+                                        className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white font-mono focus:border-[var(--color-neon-cyan)] focus:outline-none"
                                     />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wider">URL del Logo</label>
+                                    <input
+                                        type="url"
+                                        name="logoUrl"
+                                        defaultValue={editingPorra.logo_url || ''}
+                                        className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--color-neon-cyan)] focus:outline-none"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wider">Color Primario</label>
+                                        <input
+                                            type="color"
+                                            name="primaryColor"
+                                            defaultValue={editingPorra.primary_color || '#00ff00'}
+                                            className="w-full h-10 rounded-lg cursor-pointer"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] text-gray-500 mb-1 uppercase tracking-wider">Color Secundario</label>
+                                        <input
+                                            type="color"
+                                            name="secondaryColor"
+                                            defaultValue={editingPorra.secondary_color || '#00ffff'}
+                                            className="w-full h-10 rounded-lg cursor-pointer"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="flex gap-3 pt-4">
+                            {/* Prize Config Section */}
+                            <div className="space-y-4 pt-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-heading font-black text-[var(--color-neon-green)] uppercase tracking-widest">Distribución de Premios</h3>
+                                    <button
+                                        type="button"
+                                        onClick={addPrize}
+                                        className="text-[10px] bg-[var(--color-neon-green)]/10 text-[var(--color-neon-green)] px-2 py-1 rounded border border-[var(--color-neon-green)]/20 hover:bg-[var(--color-neon-green)]/20"
+                                    >
+                                        + Añadir Premio
+                                    </button>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {prizes.length === 0 && (
+                                        <p className="text-[10px] text-gray-500 italic text-center py-4 bg-white/5 rounded-lg border border-dashed border-white/10">No hay premios configurados.</p>
+                                    )}
+                                    {prizes.map((prize, index) => (
+                                        <div key={index} className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-2 relative group">
+                                            <button
+                                                type="button"
+                                                onClick={() => removePrize(index)}
+                                                className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                x
+                                            </button>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <input
+                                                    placeholder="Ej: 1er Puesto"
+                                                    value={prize.label}
+                                                    onChange={(e) => updatePrize(index, 'label', e.target.value)}
+                                                    className="bg-black/30 border border-white/10 rounded p-2 text-[10px] text-white focus:border-[var(--color-neon-cyan)] focus:outline-none"
+                                                />
+                                                <input
+                                                    placeholder="Ej: 70%"
+                                                    value={prize.value}
+                                                    onChange={(e) => updatePrize(index, 'value', e.target.value)}
+                                                    className="bg-black/30 border border-white/10 rounded p-2 text-[10px] text-white focus:border-[var(--color-neon-cyan)] focus:outline-none font-bold"
+                                                />
+                                            </div>
+                                            <input
+                                                placeholder="Descripción (ej: Del total recaudado)"
+                                                value={prize.description}
+                                                onChange={(e) => updatePrize(index, 'description', e.target.value)}
+                                                className="w-full bg-black/30 border border-white/10 rounded p-2 text-[10px] text-gray-400 focus:border-[var(--color-neon-cyan)] focus:outline-none"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-6 sticky bottom-0 bg-[var(--color-surface)] pb-2 mt-4 border-t border-white/10 pt-4">
                                 <button
                                     type="button"
                                     onClick={() => setEditingPorra(null)}
-                                    className="flex-1 py-3 rounded-lg bg-white/10 text-gray-400 hover:text-white transition-colors font-medium"
+                                    className="flex-1 py-3 rounded-lg bg-white/10 text-gray-400 hover:text-white transition-colors font-medium text-sm"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-3 rounded-lg bg-[var(--color-neon-cyan)] text-black font-bold hover:brightness-110 transition-all"
+                                    className="flex-1 py-3 rounded-lg bg-[var(--color-neon-cyan)] text-black font-black uppercase tracking-tighter italic hover:brightness-110 transition-all shadow-[0_0_15px_rgba(0,255,255,0.3)] text-sm"
                                 >
                                     Guardar
                                 </button>

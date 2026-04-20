@@ -17,6 +17,18 @@ export default async function RulesPage() {
         profile = data;
     }
 
+    // Obtener porra para branding
+    let porraName = 'Porra';
+    if (profile) {
+        if (profile.porra_id) {
+            const { data } = await supabase.from('porras').select('name').eq('id', profile.porra_id).single();
+            if (data) porraName = data.name;
+        } else {
+            const { data } = await supabase.from('porras').select('name').eq('slug', 'principal').single();
+            if (data) porraName = data.name;
+        }
+    }
+
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
             {profile && <Sidebar
@@ -34,7 +46,7 @@ export default async function RulesPage() {
                             <Shield className="text-[var(--color-neon-cyan)]" size={32} />
                         </div>
                         <h1 className="text-4xl md:text-5xl font-heading font-black uppercase tracking-tighter italic">
-                            Reglas de la <span className="text-[var(--color-neon-cyan)]">Porra</span>
+                            Reglas de la <span className="text-[var(--color-neon-cyan)]">{porraName}</span>
                         </h1>
                         <p className="text-gray-400 max-w-xl mx-auto text-lg">
                             Todo lo que necesitas saber sobre el sistema de puntos y la distribución de premios del Mundial 2026.
@@ -101,41 +113,6 @@ export default async function RulesPage() {
                         </div>
                     </section>
 
-                    {/* Prize Distribution */}
-                    <section className="space-y-6">
-                        <div className="flex items-center gap-3">
-                            <Trophy className="text-[var(--color-neon-cyan)]" size={24} />
-                            <h2 className="text-2xl font-heading font-bold uppercase italic">Distribución de Premios</h2>
-                        </div>
-
-                        <div className="bg-surface/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden relative">
-                            <div className="absolute -top-24 -right-24 w-64 h-64 bg-[var(--color-neon-cyan)]/10 rounded-full blur-[80px]" />
-                            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-[var(--color-neon-green)]/10 rounded-full blur-[80px]" />
-
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
-                                <div className="p-6 rounded-2xl bg-gradient-to-b from-white/10 to-transparent border border-white/10 text-center space-y-2">
-                                    <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">1er Puesto</p>
-                                    <p className="text-5xl font-heading font-black text-[var(--color-neon-cyan)] drop-shadow-[0_0_10px_rgba(0,255,255,0.4)]">70%</p>
-                                    <p className="text-[10px] text-gray-500 italic">Del total recaudado</p>
-                                </div>
-                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2">
-                                    <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">2do Puesto</p>
-                                    <p className="text-4xl font-heading font-black text-white/90">10%</p>
-                                    <p className="text-[10px] text-gray-500 italic">Del total recaudado</p>
-                                </div>
-                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2">
-                                    <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">3er Puesto</p>
-                                    <p className="text-4xl font-heading font-black text-white/70">5%</p>
-                                    <p className="text-[10px] text-gray-500 italic">Del total recaudado</p>
-                                </div>
-                                <div className="p-6 rounded-2xl bg-[var(--color-neon-red)]/5 border border-[var(--color-neon-red)]/20 text-center space-y-2">
-                                    <p className="text-xs text-[var(--color-neon-red)] uppercase font-bold tracking-widest opacity-70">Plataforma</p>
-                                    <p className="text-4xl font-heading font-black text-[var(--color-neon-red)]">15%</p>
-                                    <p className="text-[10px] text-gray-500 italic">Gastos y Casa</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
 
                     {/* Important Rules */}
                     <section className="space-y-4">

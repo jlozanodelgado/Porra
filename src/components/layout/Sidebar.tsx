@@ -20,7 +20,8 @@ import {
     Search,
     User,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Gift
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -41,6 +42,7 @@ const participantItems = [
     { href: '/dashboard/mis-predicciones', label: 'Mis Predicciones', icon: BookOpen },
     { href: '/profile', label: 'Mi Perfil', icon: User },
     { href: '/reglas', label: 'Reglas', icon: Shield },
+    { href: '/premios', label: 'Premios', icon: Gift },
 ];
 
 const adminItems = [
@@ -53,6 +55,7 @@ const adminItems = [
     { href: '/admin/predictions', label: 'Transparencia', icon: BarChart3 },
     { href: '/profile', label: 'Mi Perfil', icon: User },
     { href: '/reglas', label: 'Reglas', icon: Shield },
+    { href: '/premios', label: 'Premios', icon: Gift },
 ];
 
 export default function Sidebar({ isAdmin, displayName, avatarUrl, nickname }: SidebarProps) {

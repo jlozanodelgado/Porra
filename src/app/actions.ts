@@ -8,137 +8,158 @@ import { revalidatePath } from 'next/cache'
 // ──── REGISTRO ────
 
 export async function registerUser(formData: FormData) {
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-    const displayName = formData.get('displayName') as string
-    const nickname = formData.get('nickname') as string
-    const phone = formData.get('phone') as string
-    const avatarUrl = formData.get('avatarUrl') as string
-    const porraId = formData.get('porraId') as string
+    try {
+        const email = formData.get('email') as string
+        const password = formData.get('password') as string
+        const displayName = formData.get('displayName') as string
+        const nickname = formData.get('nickname') as string
+        const phone = formData.get('phone') as string
+        const avatarUrl = formData.get('avatarUrl') as string
+        const porraId = formData.get('porraId') as string
 
-    if (!email || !password || !displayName || !nickname) {
-        return { error: 'Todos los campos obligatorios deben ser completados.' }
-    }
-
-    const supabase = await createClient()
-
-    const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-            data: { display_name: displayName }
+        if (!email || !password || !displayName || !nickname) {
+            return { error: 'Todos los campos obligatorios deben ser completados.' }
         }
-    })
 
-    if (error) {
-        return { error: error.message }
-    }
+        const supabase = await createClient()
 
-    // Insertar perfil en la tabla profiles
-    if (data.user) {
-        const { error: profileError } = await supabase.from('profiles').insert({
-            id: data.user.id,
-            display_name: displayName,
-            nickname: nickname,
-            phone: phone || null,
-            avatar_url: avatarUrl || null,
-            porra_id: porraId || null,
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { display_name: displayName }
+            }
         })
 
-        if (profileError) {
-            console.error('Error creating profile:', profileError)
-            return { error: 'Cuenta creada pero hubo un error al crear el perfil. Contacta al administrador.' }
+        if (error) {
+            return { error: error.message }
         }
-    }
 
-    return { success: true }
+        // Insertar perfil en la tabla profiles
+        if (data.user) {
+            const { error: profileError } = await supabase.from('profiles').insert({
+                id: data.user.id,
+                display_name: displayName,
+                nickname: nickname,
+                phone: phone || null,
+                avatar_url: avatarUrl || null,
+                porra_id: porraId || null,
+            })
+
+            if (profileError) {
+                console.error('Error creating profile (DB error):', profileError)
+                return { error: 'Cuenta creada pero hubo un error al crear el perfil. Contacta al administrador.' }
+            }
+        }
+
+        return { success: true }
+    } catch (err: any) {
+        console.error('CRITICAL - Unhandled error in registerUser:', err)
+        return { error: `Error inesperado: ${err.message || 'Error del servidor'}` }
+    }
 }
 
 // ──── ADMIN: GESTIÓN DE PORRAS ────
 
 export async function createPorra(formData: FormData) {
-    const supabase = await createClient()
+    try {
+        const supabase = await createClient()
 
-    // Verificar admin
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'No autenticado.' }
+        // Verificar admin
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'No autenticado.' }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single()
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
 
-    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+        if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
 
-    const name = formData.get('name') as string
-    const slug = formData.get('slug') as string
-    const logoUrl = formData.get('logoUrl') as string
-    const primaryColor = formData.get('primaryColor') as string
-    const secondaryColor = formData.get('secondaryColor') as string
+        const name = formData.get('name') as string
+        const slug = formData.get('slug') as string
+        const logoUrl = formData.get('logoUrl') as string
+        const primaryColor = formData.get('primaryColor') as string
+        const secondaryColor = formData.get('secondaryColor') as string
+        const prizeConfigRaw = formData.get('prizeConfig') as string
+        const prizeConfig = prizeConfigRaw ? JSON.parse(prizeConfigRaw) : []
 
-    if (!name || !slug) {
-        return { error: 'Nombre y slug son obligatorios.' }
+        if (!name || !slug) {
+            return { error: 'Nombre y slug son obligatorios.' }
+        }
+
+        const { error } = await supabase.from('porras').insert({
+            name,
+            slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+            logo_url: logoUrl || null,
+            primary_color: primaryColor || '#00ff00',
+            secondary_color: secondaryColor || '#00ffff',
+            prize_config: prizeConfig
+        })
+
+        if (error) {
+            console.error('Database error in createPorra:', error)
+            return { error: 'Error al crear la porra. El slug puede ya existir.' }
+        }
+
+        revalidatePath('/admin/porras')
+        return { success: true }
+    } catch (err: any) {
+        console.error('CRITICAL - Unhandled error in createPorra:', err)
+        return { error: `Error inesperado: ${err.message || 'Error del servidor'}` }
     }
-
-    const { error } = await supabase.from('porras').insert({
-        name,
-        slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
-        logo_url: logoUrl || null,
-        primary_color: primaryColor || '#00ff00',
-        secondary_color: secondaryColor || '#00ffff',
-    })
-
-    if (error) {
-        console.error('Error creating porra:', error)
-        return { error: 'Error al crear la porra. El slug puede ya existir.' }
-    }
-
-    revalidatePath('/admin/porras')
-    return { success: true }
 }
 
 export async function updatePorra(formData: FormData) {
-    const supabase = await createClient()
+    try {
+        const supabase = await createClient()
 
-    // Verificar admin
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'No autenticado.' }
+        // Verificar admin
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'No autenticado.' }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single()
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
 
-    if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
+        if (!profile?.is_admin) return { error: 'No tienes permisos de administrador.' }
 
-    const porraId = formData.get('porraId') as string
-    const name = formData.get('name') as string
-    const slug = formData.get('slug') as string
-    const logoUrl = formData.get('logoUrl') as string
-    const primaryColor = formData.get('primaryColor') as string
-    const secondaryColor = formData.get('secondaryColor') as string
+        const porraId = formData.get('porraId') as string
+        const name = formData.get('name') as string
+        const slug = formData.get('slug') as string
+        const logoUrl = formData.get('logoUrl') as string
+        const primaryColor = formData.get('primaryColor') as string
+        const secondaryColor = formData.get('secondaryColor') as string
+        const prizeConfigRaw = formData.get('prizeConfig') as string
+        const prizeConfig = prizeConfigRaw ? JSON.parse(prizeConfigRaw) : []
 
-    if (!porraId || !name || !slug) {
-        return { error: 'ID, nombre y slug son obligatorios.' }
+        if (!porraId || !name || !slug) {
+            return { error: 'ID, nombre y slug son obligatorios.' }
+        }
+
+        const { error } = await supabase.from('porras').update({
+            name,
+            slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+            logo_url: logoUrl || null,
+            primary_color: primaryColor || '#00ff00',
+            secondary_color: secondaryColor || '#00ffff',
+            prize_config: prizeConfig
+        }).eq('id', porraId)
+
+        if (error) {
+            console.error('Error updating porra:', error)
+            return { error: 'Error al actualizar la porra.' }
+        }
+
+        revalidatePath('/admin/porras')
+        return { success: true }
+    } catch (err: any) {
+        console.error('CRITICAL - Unhandled error in updatePorra:', err)
+        return { error: `Error inesperado: ${err.message || 'Error del servidor'}` }
     }
-
-    const { error } = await supabase.from('porras').update({
-        name,
-        slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
-        logo_url: logoUrl || null,
-        primary_color: primaryColor || '#00ff00',
-        secondary_color: secondaryColor || '#00ffff',
-    }).eq('id', porraId)
-
-    if (error) {
-        console.error('Error updating porra:', error)
-        return { error: 'Error al actualizar la porra.' }
-    }
-
-    revalidatePath('/admin/porras')
-    return { success: true }
 }
 
 export async function deletePorra(porraId: string) {
