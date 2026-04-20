@@ -31,6 +31,7 @@ interface SidebarProps {
     displayName: string;
     avatarUrl?: string | null;
     nickname: string;
+    porraName?: string;
 }
 
 const participantItems = [
@@ -58,7 +59,7 @@ const adminItems = [
     { href: '/premios', label: 'Premios', icon: Gift },
 ];
 
-export default function Sidebar({ isAdmin, displayName, avatarUrl, nickname }: SidebarProps) {
+export default function Sidebar({ isAdmin, displayName, avatarUrl, nickname, porraName }: SidebarProps) {
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -106,7 +107,14 @@ export default function Sidebar({ isAdmin, displayName, avatarUrl, nickname }: S
                 </div>
                 {!isCollapsed && (
                     <div className="flex-1 overflow-hidden">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black group-hover:text-[var(--color-neon-cyan)] transition-colors">Jugador</p>
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black group-hover:text-[var(--color-neon-cyan)] transition-colors">Jugador</p>
+                            {porraName && (
+                                <span className="text-[9px] text-[var(--color-neon-cyan)] font-black uppercase tracking-tighter bg-[var(--color-neon-cyan)]/10 px-1.5 py-0.5 rounded leading-none">
+                                    {porraName}
+                                </span>
+                            )}
+                        </div>
                         <p className="text-sm text-white font-bold truncate leading-none mt-1">{displayName}</p>
                         {isAdmin && (
                             <span className="inline-block mt-1 text-[8px] px-1.5 py-0 rounded bg-[var(--color-neon-red)]/20 text-[var(--color-neon-red)] font-black uppercase">

@@ -14,7 +14,7 @@ export default async function PredictionsPage() {
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('is_admin, display_name, nickname, avatar_url')
+        .select('is_admin, display_name, nickname, avatar_url, porras:porra_id (name)')
         .eq('id', user.id)
         .single();
 
@@ -22,6 +22,7 @@ export default async function PredictionsPage() {
     const displayName = profile?.nickname || profile?.display_name || 'Usuario';
     const avatarUrl = profile?.avatar_url;
     const nickname = profile?.nickname || '';
+    const porraName = (profile?.porras as any)?.name;
 
     // 1. Obtener todos los partidos que ya están bloqueados o finalizados
     const nowUtc = new Date();
@@ -58,7 +59,13 @@ export default async function PredictionsPage() {
 
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
-            <Sidebar isAdmin={isAdmin} displayName={displayName} avatarUrl={avatarUrl} nickname={nickname} />
+            <Sidebar 
+                isAdmin={isAdmin} 
+                displayName={displayName} 
+                avatarUrl={avatarUrl} 
+                nickname={nickname}
+                porraName={porraName}
+            />
             <main className="flex-1 overflow-y-auto p-6 md:p-12 relative scrollbar-hide">
                 <header className="mb-10 text-center max-w-4xl mx-auto">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-neon-cyan)]/10 border border-[var(--color-neon-cyan)]/20 text-[var(--color-neon-cyan)] text-xs font-bold uppercase tracking-widest mb-4">

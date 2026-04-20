@@ -13,7 +13,7 @@ export default async function DashboardPage() {
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('id, is_admin, display_name, nickname, avatar_url, total_points')
+        .select('id, is_admin, display_name, nickname, avatar_url, total_points, porras:porra_id (name)')
         .eq('id', user.id)
         .single();
 
@@ -21,6 +21,7 @@ export default async function DashboardPage() {
     const displayName = profile?.nickname || profile?.display_name || 'Usuario';
     const avatarUrl = profile?.avatar_url || null;
     const nickname = profile?.nickname || '';
+    const porraName = (profile?.porras as any)?.name;
 
     const { data: matches, error } = await supabase.from('matches').select(`
         *,
@@ -40,7 +41,13 @@ export default async function DashboardPage() {
 
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
-            <Sidebar isAdmin={isAdmin} displayName={displayName} avatarUrl={avatarUrl} nickname={nickname} />
+            <Sidebar 
+                isAdmin={isAdmin} 
+                displayName={displayName} 
+                avatarUrl={avatarUrl} 
+                nickname={nickname}
+                porraName={porraName}
+            />
             <main className="flex-1 overflow-y-auto p-6 md:p-12 relative scrollbar-hide">
                 {/* Luces Neón de Fondo */}
                 <div className="absolute top-10 left-10 w-96 h-96 bg-[var(--color-neon-cyan)]/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>

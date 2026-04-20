@@ -15,7 +15,7 @@ export default async function ProfilePage() {
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('*, total_points')
+        .select('*, porras:porra_id (name)')
         .eq('id', user.id)
         .single();
 
@@ -23,10 +23,17 @@ export default async function ProfilePage() {
     const displayName = profile?.nickname || profile?.display_name || 'Usuario';
     const avatarUrl = profile?.avatar_url || null;
     const nickname = profile?.nickname || '';
+    const porraName = (profile?.porras as any)?.name;
 
     return (
         <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
-            <Sidebar isAdmin={isAdmin} displayName={displayName} avatarUrl={avatarUrl} nickname={nickname} />
+            <Sidebar 
+                isAdmin={isAdmin} 
+                displayName={displayName} 
+                avatarUrl={avatarUrl} 
+                nickname={nickname}
+                porraName={porraName}
+            />
             <main className="flex-1 overflow-y-auto p-6 md:p-12 relative">
                 {/* Luces Neón de Fondo */}
                 <div className="absolute top-10 left-10 w-96 h-96 bg-[var(--color-neon-cyan)]/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
@@ -95,6 +102,13 @@ export default async function ProfilePage() {
                                             <span className={`font-bold uppercase text-xs ${profile?.is_paid ? 'text-[var(--color-neon-green)]' : 'text-[var(--color-neon-red)]'}`}>
                                                 {profile?.is_paid ? 'Cuenta Activa' : 'Pago Pendiente'}
                                             </span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] text-gray-500 uppercase tracking-widest font-black block mb-1">Tu Porra</label>
+                                        <div className="flex items-center gap-2 text-[var(--color-neon-cyan)] font-bold uppercase tracking-wider text-sm">
+                                            <Trophy size={14} />
+                                            <span>{porraName || 'Global'}</span>
                                         </div>
                                     </div>
                                 </div>
