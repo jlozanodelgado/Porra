@@ -6,8 +6,13 @@ on:
       - main
   workflow_dispatch:
 
+# ESTA ES LA PARTE QUE FALTA:
+permissions:
+  contents: read
+  packages: write
+
 jobs:
-  build:   # <--- Ahora está indentado (2 espacios)
+  build:
     runs-on: ubuntu-latest
 
     steps:
