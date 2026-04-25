@@ -35,9 +35,13 @@ export async function registerUser(formData: FormData) {
             return { error: error.message }
         }
 
-        // Insertar perfil en la tabla profiles
+        // Insertar perfil usando el admin client para saltar RLS.
+        // Necesario en Supabase self-hosted donde signUp() puede no crear
+        // una sesión inmediata si la confirmación de email está activa,
+        // haciendo que auth.uid() sea null y bloqueando la política INSERT.
         if (data.user) {
-            const { error: profileError } = await supabase.from('profiles').insert({
+            const adminSupabase = await createAdminClient()
+            const { error: profileError } = await adminSupabase.from('profiles').insert({
                 id: data.user.id,
                 display_name: displayName,
                 nickname: nickname,
