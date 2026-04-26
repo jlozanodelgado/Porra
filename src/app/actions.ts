@@ -35,24 +35,21 @@ export async function registerUser(formData: FormData) {
             return { error: error.message }
         }
 
-        // Insertar perfil usando el admin client para saltar RLS.
-        // Necesario en Supabase self-hosted donde signUp() puede no crear
-        // una sesión inmediata si la confirmación de email está activa,
-        // haciendo que auth.uid() sea null y bloqueando la política INSERT.
+        // Usamos UPDATE en lugar de INSERT porque el Trigger 'on_auth_user_created'
+        // ya creó la fila automáticamente en la tabla 'profiles' al hacer el signUp.
         if (data.user) {
             const adminSupabase = await createAdminClient()
-            const { error: profileError } = await adminSupabase.from('profiles').insert({
-                id: data.user.id,
+            const { error: profileError } = await adminSupabase.from('profiles').update({
                 display_name: displayName,
                 nickname: nickname,
                 phone: phone || null,
                 avatar_url: avatarUrl || null,
                 porra_id: porraId || null,
-            })
+            }).eq('id', data.user.id)
 
             if (profileError) {
-                console.error('Error creating profile (DB error):', profileError)
-                return { error: 'Cuenta creada pero hubo un error al crear el perfil. Contacta al administrador.' }
+                console.error('Error updating profile (DB error):', profileError)
+                return { error: 'Cuenta creada pero hubo un error al configurar el perfil.' }
             }
         }
 
@@ -758,7 +755,7 @@ export async function requestPasswordReset(identifier: string) {
         const domainParts = domain.split('.');
         const domainName = domainParts[0];
         const tld = domainParts.slice(1).join('.');
-        return `${maskSide(local)}@${maskSide(domainName)}.${tld}`;
+        return `${maskedEmail(local)}@${domainName}.${tld}`;
     };
 
     return { success: true, email: maskedEmail(email) }
