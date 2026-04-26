@@ -5,6 +5,17 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
+
+# --- ESTA PARTE ES NUEVA ---
+# Definimos los argumentos que vendrán desde GitHub Actions
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+# Los convertimos en variables de entorno para que Next.js los vea al compilar
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+# ---------------------------
+
 RUN npm run build
 
 FROM node:20-alpine
