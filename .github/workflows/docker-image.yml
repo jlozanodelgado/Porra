@@ -6,7 +6,6 @@ on:
       - main
   workflow_dispatch:
 
-# ESTA ES LA PARTE QUE FALTA:
 permissions:
   contents: read
   packages: write
@@ -35,3 +34,7 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/jlozanodelgado/porra:latest
+          # AGREGAMOS ESTO PARA PASAR LAS LLAVES AL MOMENTO DE COMPILAR
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
