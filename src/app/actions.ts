@@ -745,17 +745,17 @@ export async function requestPasswordReset(identifier: string) {
     }
 
     // Enmascarar el email para seguridad antes de enviarlo al cliente
-    const maskedEmail = (emailStr: string) => {
+    const maskedEmail = (emailStr: string): string => {
         const [local, domain] = emailStr.split('@');
         if (!local || !domain) return emailStr;
-        const maskSide = (str: string) => {
+        const maskSide = (str: string): string => {
             if (str.length <= 2) return str[0] + '*';
             return str[0] + '*'.repeat(Math.min(str.length - 2, 5)) + str[str.length - 1];
         };
         const domainParts = domain.split('.');
         const domainName = domainParts[0];
         const tld = domainParts.slice(1).join('.');
-        return `${maskedEmail(local)}@${domainName}.${tld}`;
+        return `${maskSide(local)}@${maskSide(domainName)}.${tld}`;
     };
 
     return { success: true, email: maskedEmail(email) }
