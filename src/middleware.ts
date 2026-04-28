@@ -17,38 +17,18 @@ export async function middleware(request: NextRequest) {
                     return request.cookies.get(name)?.value
                 },
                 set(name: string, value: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    })
+                    request.cookies.set({ name, value, ...options })
                     response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
+                        request: { headers: request.headers },
                     })
-                    response.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    })
+                    response.cookies.set({ name, value, ...options })
                 },
                 remove(name: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    })
+                    request.cookies.set({ name, value: '', ...options })
                     response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
+                        request: { headers: request.headers },
                     })
-                    response.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    })
+                    response.cookies.set({ name, value: '', ...options })
                 },
             },
         }
@@ -57,15 +37,16 @@ export async function middleware(request: NextRequest) {
     // IMPORTANTE: Refrescar la sesión
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Rutas públicas y de estado
-    const publicRoutes = ['/login', '/register', '/auth', '/forgot-password', '/reset-password'];
     const path = request.nextUrl.pathname;
+
+    // Rutas públicas base
+    const publicRoutes = ['/login', '/register', '/auth', '/forgot-password', '/reset-password'];
     const isPublicRootRoute = publicRoutes.some(route => path.startsWith(route));
 
-    // Check for porra public routes: /porra/[slug], /porra/[slug]/login, /porra/[slug]/register
+    // Rutas públicas de porra dinámica
     const segments = path.split('/').filter(Boolean);
     const isPublicPorraRoute = path.startsWith('/porra/') && (
-        segments.length === 2 || // /porra/[slug]
+        segments.length === 2 || 
         (segments.length === 3 && (segments[2] === 'login' || segments[2] === 'register'))
     );
 
@@ -78,7 +59,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    // 2. Si hay sesión, verificar estado de pago/admin
+    // 2. Si hay sesión, verificar estado
     if (user) {
         const { data: profile } = await supabase
             .from('profiles')
@@ -88,20 +69,19 @@ export async function middleware(request: NextRequest) {
 
         const isApproved = profile?.is_paid || profile?.is_admin || false;
 
-        // Si NO está aprobado y NO está en la página de pendiente/pública -> Redirigir a pendiente
+        // Redirigir a pendiente si no está aprobado
         if (!isApproved && !isPublicRoute && !isRoot && !isPendingPage) {
             return NextResponse.redirect(new URL('/pending-approval', request.url))
         }
 
-        // Si YA está aprobado y está en la página de pendiente -> Redirigir al dashboard
+        // Redirigir al dashboard si ya está aprobado y está en /pending-approval
         if (isApproved && isPendingPage) {
             return NextResponse.redirect(new URL('/dashboard', request.url))
         }
 
-        // Si ya está logueado y aprobado, no dejar entrar a login/register
+        // Evitar login/register si ya está autenticado y aprobado
         const isLoginOrRegister = path === '/login' || path === '/register' || (isPublicPorraRoute && (path.endsWith('/login') || path.endsWith('/register')));
         if (isApproved && isLoginOrRegister) {
-            // Si es una ruta de porra, redirigir al dashboard de esa porra
             if (isPublicPorraRoute && segments.length >= 2) {
                 const slug = segments[1];
                 return NextResponse.redirect(new URL(`/porra/${slug}/dashboard`, request.url))
@@ -116,12 +96,13 @@ export async function middleware(request: NextRequest) {
 export const config = {
     matcher: [
         /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - auth/callback (ESTA ES LA CLAVE)
-         * - api (api routes)
+         * Match all request paths except for:
+         * - api (rutas de API)
+         * - auth/callback (EXCLUIDO PARA FIX DE PKCE)
+         * - _next/static (archivos estáticos)
+         * - _next/image (optimización de imágenes)
+         * - favicon.ico (favicon)
+         * - Archivos con extensiones de imagen
          */
         '/((?!api|auth/callback|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
