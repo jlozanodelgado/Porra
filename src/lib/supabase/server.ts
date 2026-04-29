@@ -43,10 +43,11 @@ export async function createClient() {
                         cookiesToSet.forEach(({ name, value, options }) =>
                             cookieStore.set(name, value, {
                                 ...options,
-                                // CONFIGURACIÓN CRÍTICA PARA FIX DE PKCE
+                                // CONFIGURACIÓN MEJORADA PARA VPS Y PKCE
                                 path: '/',
                                 sameSite: 'lax',
                                 secure: true,
+                                httpOnly: true,
                             })
                         )
                     } catch {
