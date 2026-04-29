@@ -735,8 +735,11 @@ export async function requestPasswordReset(identifier: string) {
         siteUrl = siteUrl.slice(0, -1)
     }
 
+    // Usar la URL calculada dinámicamente para el callback
+    const callbackUrl = `${siteUrl}/auth/callback?next=/reset-password`
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://unxmedia.cloud/auth/callback?next=/reset-password',
+        redirectTo: callbackUrl,
     })
 
     if (error) {

@@ -21,14 +21,25 @@ export async function GET(request: Request) {
     
     if (!error) {
       console.log('✅ Sesión validada con éxito')
-      const redirectUrl = new URL(next, siteUrl)
-      return NextResponse.redirect(redirectUrl)
+      // Si todo sale bien, redirigimos a la página deseada (p.ej. /reset-password)
+      return NextResponse.redirect(new URL(next, siteUrl))
     } else {
-      console.error('❌ Error de Supabase Auth:', error.message)
-      // Si el error es PKCE, aquí lo confirmaremos en el log
+      console.error('❌ Error de Supabase Auth en exchangeCodeForSession:', error.message)
+      // Si el error es sobre el flujo de PKCE, intentamos redirigir de todos modos si ya existe sesión
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        console.log('ℹ️ Sesión ya existente, redirigiendo a:', next)
+        return NextResponse.redirect(new URL(next, siteUrl))
+      }
+      
+      const errorMsg = encodeURIComponent(`Error de autenticación: ${error.message}`)
+      return NextResponse.redirect(new URL(`/login?error=${errorMsg}`, siteUrl))
     }
   }
 
-  const errorUrl = new URL('/login?error=No se pudo validar la sesión', siteUrl)
+  // Si no hay código, podría ser un flujo de recuperación antiguo (en el hash)
+  // o simplemente un acceso inválido
+  console.error('❌ No se encontró el código de validación en la URL')
+  const errorUrl = new URL('/login?error=No se pudo validar la sesión (Código ausente)', siteUrl)
   return NextResponse.redirect(errorUrl)
 }
