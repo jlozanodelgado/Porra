@@ -30,7 +30,7 @@ export default function PendingApprovalPage() {
                 <h1 className="text-4xl font-heading font-black text-white uppercase tracking-tighter mb-4">
                     Cuenta <span className="text-[var(--color-neon-red)]">Inactiva</span>
                 </h1>
-                
+
                 <div className="space-y-4 mb-10">
                     <p className="text-gray-300 font-medium">
                         Tu cuenta ha sido creada exitosamente, pero aún no tienes acceso completo a la plataforma de pronósticos.
@@ -49,8 +49,8 @@ export default function PendingApprovalPage() {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                    <a 
-                        href="https://wa.me/573004561234" // Podrías cambiar esto por el número real
+                    <a
+                        href="https://wa.me/573162588650" // Podrías cambiar esto por el número real
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center justify-center gap-3 w-full py-4 rounded-xl bg-[var(--color-neon-green)] text-black font-bold font-heading hover:brightness-110 shadow-[0_0_15px_rgba(57,255,20,0.3)] transition-all uppercase tracking-widest"
@@ -58,7 +58,7 @@ export default function PendingApprovalPage() {
                         <MessageCircle size={20} />
                         Contactar Administrador
                     </a>
-                    
+
                     <button
                         onClick={handleLogout}
                         className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-white/5 border border-white/10 text-gray-400 font-bold font-heading hover:bg-white/10 hover:text-white transition-all uppercase tracking-widest text-xs"
