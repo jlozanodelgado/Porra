@@ -50,7 +50,7 @@ export default function PendingApprovalPage() {
 
                 <div className="flex flex-col gap-4">
                     <a
-                        href="https://wa.me/573162588650" // Podrías cambiar esto por el número real
+                        href="mailto:porrabet@proton.me" // Podrías cambiar esto por el número real
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center justify-center gap-3 w-full py-4 rounded-xl bg-[var(--color-neon-green)] text-black font-bold font-heading hover:brightness-110 shadow-[0_0_15px_rgba(57,255,20,0.3)] transition-all uppercase tracking-widest"
