@@ -127,7 +127,7 @@ export default function DashboardClient({
                                     {groupedPending[dateKey].map((m) => {
                                         const prediction = userPredictions?.find(p => p.match_id === m.id);
                                         return (
-                                            <a key={m.id} href={`/match/${m.id}`} className="block group">
+                                            <a key={m.id} href={`/match/${m.id}`} className="block group h-full">
                                                 <MatchCard
                                                     id={m.id}
                                                     homeTeam={m.home?.name || 'Local'}
@@ -157,7 +157,7 @@ export default function DashboardClient({
                         {finishedMatches.length > 0 ? finishedMatches.map((m) => {
                             const prediction = userPredictions?.find(p => p.match_id === m.id);
                             return (
-                                <a key={m.id} href={`/match/${m.id}`} className="block">
+                                <a key={m.id} href={`/match/${m.id}`} className="block h-full">
                                     <MatchCard
                                         id={m.id}
                                         homeTeam={m.home?.name || 'Local'}
