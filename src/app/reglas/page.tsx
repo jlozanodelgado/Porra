@@ -142,7 +142,7 @@ export default async function RulesPage() {
                             <div className="space-y-3">
                                 <p className="text-white font-medium">En caso de igualdad de puntos en la tabla de clasificación:</p>
                                 <ul className="list-disc list-inside space-y-2 text-gray-300 text-sm">
-                                    <li>Si existe un <span className="text-white font-bold">empate en el 1er lugar</span>, los ganadores se dividirán el premio (70% + 10%) y <span className="text-[var(--color-neon-red)] font-bold">se anulará el 2do puesto</span>.</li>
+                                    <li>Si existe un <span className="text-white font-bold">empate en el 1er lugar</span>, los ganadores se dividirán el premio (se suman los dos premios y se divide entre los jugadores) y <span className="text-[var(--color-neon-red)] font-bold">se anulará el 2do puesto</span>.</li>
                                     <li>De la misma manera, si existe un <span className="text-white font-bold">empate en el 2do lugar</span>, se repartirán el premio correspondiente y <span className="text-[var(--color-neon-red)] font-bold">se anulará el 3er puesto</span>.</li>
                                 </ul>
                             </div>
