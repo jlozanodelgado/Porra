@@ -15,7 +15,7 @@ export default function LoginPage() {
         e.preventDefault();
         setError(null);
 
-        // Obtener el correo electrónico asociado a este nickname
+        // 1. Obtener el correo electrónico asociado al nickname
         const { data: emailData, error: rpcError } = await supabase.rpc('get_email_by_nickname', {
             p_nickname: nickname
         });
@@ -27,12 +27,20 @@ export default function LoginPage() {
 
         const email = emailData as string;
 
-        // Iniciar sesión con Supabase Auth usando el correo y la contraseña
+        // 2. Iniciar sesión con Supabase Auth
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        
         if (error) {
             setError('Contraseña incorrecta.');
         } else if (data.user) {
-            // Verificar si el usuario está aprobado
+            
+            // 🚨 SOLUCIÓN AL PROBLEMA DE COOKIES/CACHÉ:
+            // Refrescamos el router para limpiar la "memoria" de Next.js
+            // Esto asegura que si antes había un usuario inactivo, el sistema
+            // reconozca que ahora hay una sesión nueva.
+            router.refresh();
+
+            // 3. Verificar el estado del perfil (Aprobado o Admin)
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('is_paid, is_admin')
@@ -48,37 +56,37 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-6 relative overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--color-neon-cyan)]/20 rounded-full blur-[120px] pointer-events-none"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[var(--color-neon-purple)]/20 rounded-full blur-[120px] pointer-events-none"></div>
-
-            <div className="w-full max-w-md bg-[var(--color-surface)]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl z-10">
+        <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-hidden">
+            <div className="w-full max-w-md bg-surface/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-heading font-bold text-white mb-2">Bienvenido a la Porra</h1>
-                    <p className="text-gray-400 font-body text-sm">Ingresa para dejar tus pronósticos del Mundial.</p>
+                    <h1 className="text-4xl font-heading font-black text-white italic tracking-tighter uppercase mb-2">
+                        Bienvenido
+                    </h1>
+                    <p className="text-gray-400 font-body text-sm uppercase tracking-widest">
+                        Ingresa a tu cuenta de La Porra
+                    </p>
                 </div>
 
-                <form onSubmit={handleLogin} className="flex flex-col gap-4 font-body">
-                    <div className="flex flex-col">
-                        <label className="text-sm text-gray-400 mb-1">Apodo (Usuario)</label>
+                <form onSubmit={handleLogin} className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest font-black text-gray-400 ml-1">Apodo (Nickname)</label>
                         <input
                             type="text"
-                            required
                             value={nickname}
                             onChange={(e) => setNickname(e.target.value)}
-                            className="bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--color-neon-cyan)] focus:outline-none focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-colors"
+                            required
+                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-colors"
                             placeholder="Tu apodo"
                         />
                     </div>
-                    <div className="flex flex-col">
-                        <label className="text-sm text-gray-400 mb-1">Contraseña</label>
+                    <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest font-black text-gray-400 ml-1">Contraseña</label>
                         <input
                             type="password"
-                            required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[var(--color-neon-cyan)] focus:outline-none focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-colors"
+                            required
+                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-1 focus:ring-[var(--color-neon-cyan)] transition-colors"
                             placeholder="••••••••"
                         />
                         <div className="flex justify-end mt-1">
@@ -89,9 +97,10 @@ export default function LoginPage() {
                                 ¿Olvidaste tu contraseña?
                             </a>
                         </div>
-
                     </div>
+
                     {error && <p className="text-[var(--color-neon-red)] text-sm">{error}</p>}
+                    
                     <button
                         type="submit"
                         className="mt-4 w-full py-3 rounded-lg bg-[var(--color-neon-green)] text-black font-bold font-heading hover:brightness-110 shadow-[0_0_10px_var(--color-neon-green)] transition-all"
