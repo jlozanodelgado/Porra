@@ -34,8 +34,13 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    // IMPORTANTE: Refrescar la sesión
-    const { data: { user } } = await supabase.auth.getUser()
+    // IMPORTANTE: Refrescar la sesión y capturar el error
+    const { data: { user }, error } = await supabase.auth.getUser()
+
+    // 🚨 EL ÚNICO CAMBIO NUEVO: Si hay error (cookie zombie de Chrome), la destruimos
+    if (error) {
+        await supabase.auth.signOut()
+    }
 
     const path = request.nextUrl.pathname;
 
