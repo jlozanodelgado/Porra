@@ -5,6 +5,10 @@ import { ClipboardList } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
 import PredictionsClient from './PredictionsClient';
 
+// 🚀 ESTAS DOS LÍNEAS DESTRUYEN EL CACHÉ Y OBLIGAN A LEER SUPABASE EN TIEMPO REAL
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function PredictionsPage() {
     const supabase = await createClient();
 
