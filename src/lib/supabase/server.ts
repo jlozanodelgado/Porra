@@ -43,10 +43,9 @@ export async function createClient() {
                         cookiesToSet.forEach(({ name, value, options }) =>
                             cookieStore.set(name, value, {
                                 ...options,
-                                // CONFIGURACIÓN MEJORADA PARA VPS Y PKCE
+                                // Se eliminó secure: true forzado, ya que rompe las cookies en http (localhost o VPS sin https)
                                 path: '/',
                                 sameSite: 'lax',
-                                secure: true,
                                 httpOnly: true,
                             })
                         )

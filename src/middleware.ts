@@ -51,7 +51,7 @@ export async function middleware(request: NextRequest) {
     // Rutas públicas de porra dinámica
     const segments = path.split('/').filter(Boolean);
     const isPublicPorraRoute = path.startsWith('/porra/') && (
-        segments.length === 2 || 
+        segments.length === 2 ||
         (segments.length === 3 && (segments[2] === 'login' || segments[2] === 'register'))
     );
 
